@@ -1,7 +1,7 @@
 # TASK — ORC-02: unattended voxel redesign pipeline (source Orc)
 
 **For:** DeepSeek Harness / CubeGame Factory  
-**Status:** AUTHORIZED FOR ONE ISOLATED PILOT, NOT EXECUTED  
+**Status:** SUPERSEDED by `ORC-02R_NEW_MODEL_GENERATION_TASK.md` — old wording caused source-geometry disassembly/reassembly instead of generation of a new model  
 **Decision:** [FACT-D18](../decisions/FACT-D18-orc02-unattended-pipeline.md)  
 **Repo:** `alfuwerce-art/factoria`, branch `factory/work`. **Local:** `D:\Projects\CubeGame Factory`.
 
