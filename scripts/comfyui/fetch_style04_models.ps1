@@ -34,13 +34,13 @@ $manifest = @(
         why   = 'main SDXL checkpoint (Lykon, official HF, openrail++)'
     },
     [pscustomobject]@{
-        id    = 'clipvit_h'
-        url   = 'https://huggingface.co/h94/IP-Adapter/resolve/main/models/image_encoder/model.safetensors'
-        file  = 'CLIP-ViT-H-14-laion2B-s32B-b79K.safetensors'
-        dir   = 'clip_vision'
-        size  = 2528373448
-        sha   = '6ca9667da1ca9e0b0f75e46bb030f7e011f44f86cbfb8d5a36590fcd7507b030'
-        why   = 'CLIP Vision ViT-H encoder required by IPAdapter (SD1.5 and SDXL vit-h)'
+        id    = 'voxelxl_lora'
+        url   = 'https://huggingface.co/Fictiverse/Voxel_XL_Lora/resolve/main/VoxelXL_v1.safetensors'
+        file  = 'VoxelXL_v1.safetensors'
+        dir   = 'loras'
+        size  = 912554516
+        sha   = '7d9a5f11e1b38d97f75d2b84bfb5bb3bf95cd0e5f2500b002d13374eb4f88b5c'
+        why   = 'SDXL LoRA "voxel style" (openrail), volumetric voxel look - experimental (small, unblocks PIXEL_STYLE early)'
     },
     [pscustomobject]@{
         id    = 'ipadapter_sdxl'
@@ -52,6 +52,15 @@ $manifest = @(
         why   = 'IPAdapter style reference for SDXL (apache-2.0)'
     },
     [pscustomobject]@{
+        id    = 'clipvit_h'
+        url   = 'https://huggingface.co/h94/IP-Adapter/resolve/main/models/image_encoder/model.safetensors'
+        file  = 'CLIP-ViT-H-14-laion2B-s32B-b79K.safetensors'
+        dir   = 'clip_vision'
+        size  = 2528373448
+        sha   = '6ca9667da1ca9e0b0f75e46bb030f7e011f44f86cbfb8d5a36590fcd7507b030'
+        why   = 'CLIP Vision ViT-H encoder required by IPAdapter (SD1.5 and SDXL vit-h)'
+    },
+    [pscustomobject]@{
         id    = 'controlnet_union'
         url   = 'https://huggingface.co/xinsir/controlnet-union-sdxl-1.0/resolve/main/diffusion_pytorch_model.safetensors'
         file  = 'controlnet-union-sdxl-1.0.safetensors'
@@ -59,15 +68,6 @@ $manifest = @(
         size  = 2512030408
         sha   = 'a9e13fd61f3193887791c8a0dd07a07202174dc47d5ddaea94ea1344f07c7467'
         why   = 'one union ControlNet for SDXL (canny/openpose/depth) instead of 3 x 2.5 GB files'
-    },
-    [pscustomobject]@{
-        id    = 'voxelxl_lora'
-        url   = 'https://huggingface.co/Fictiverse/Voxel_XL_Lora/resolve/main/VoxelXL_v1.safetensors'
-        file  = 'VoxelXL_v1.safetensors'
-        dir   = 'loras'
-        size  = 912554516
-        sha   = '7d9a5f11e1b38d97f75d2b84bfb5bb3bf95cd0e5f2500b002d13374eb4f88b5c'
-        why   = 'SDXL LoRA "voxel style" (openrail), volumetric voxel look - experimental'
     }
 )
 
