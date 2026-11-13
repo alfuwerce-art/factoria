@@ -1,0 +1,673 @@
+{
+  "id": "14533df2-6b4f-541e-b25a-3e285646c215",
+  "revision": 0,
+  "last_node_id": 12,
+  "last_link_id": 13,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "MarkdownNote",
+      "pos": [
+        -900,
+        40
+      ],
+      "size": [
+        520,
+        520
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "MarkdownNote"
+      },
+      "widgets_values": [
+        "# FACTORIA VOXEL_STYLE - IPADAPTER (style reference)\n\nReference image задаёт **визуальный voxel-язык**, а не копирует персонажа.\n\nНужны веса (пока НЕ скачаны, см. отчёт COMFY-STYLE-02/03):\n- `models/clip_vision/CLIP-ViT-H-14-laion2B-s32B-b79K.safetensors` (~2.5 GB)\n- `models/ipadapter/ip-adapter-plus_sd15.safetensors` (~98 MB)\n\nПорядок:\n1. Положить локальный style reference в `ComfyUI/input/` и выбрать его в ноде **LoadImage**.\n   Reference не публикуется в GitHub и не вшивается в workflow.\n2. Пока веса не установлены, нода IPAdapterUnifiedLoader покажет ошибку - это ожидаемо.\n3. Style weight по умолчанию 0.75, weight_type = `style transfer`, start 0.0 / end 1.0.\n4. Что должно сохраняться при смене персонажа: voxel/cuboid язык, иерархия блоков,\n   детализация лица блоками, жёсткие формы, студийная подача.\n"
+      ],
+      "widgets_values_named": {
+        "text": "# FACTORIA VOXEL_STYLE - IPADAPTER (style reference)\n\nReference image задаёт **визуальный voxel-язык**, а не копирует персонажа.\n\nНужны веса (пока НЕ скачаны, см. отчёт COMFY-STYLE-02/03):\n- `models/clip_vision/CLIP-ViT-H-14-laion2B-s32B-b79K.safetensors` (~2.5 GB)\n- `models/ipadapter/ip-adapter-plus_sd15.safetensors` (~98 MB)\n\nПорядок:\n1. Положить локальный style reference в `ComfyUI/input/` и выбрать его в ноде **LoadImage**.\n   Reference не публикуется в GitHub и не вшивается в workflow.\n2. Пока веса не установлены, нода IPAdapterUnifiedLoader покажет ошибку - это ожидаемо.\n3. Style weight по умолчанию 0.75, weight_type = `style transfer`, start 0.0 / end 1.0.\n4. Что должно сохраняться при смене персонажа: voxel/cuboid язык, иерархия блоков,\n   детализация лица блоками, жёсткие формы, студийная подача.\n"
+      },
+      "title": "FACTORIA - read me (IPAdapter)"
+    },
+    {
+      "id": 2,
+      "type": "CheckpointLoaderSimple",
+      "pos": [
+        0,
+        60
+      ],
+      "size": [
+        350,
+        110
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            1
+          ]
+        },
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            6,
+            7
+          ]
+        },
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": [
+            12
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CheckpointLoaderSimple"
+      },
+      "widgets_values": [
+        "v1-5-pruned-emaonly-fp16.safetensors"
+      ],
+      "widgets_values_named": {
+        "ckpt_name": "v1-5-pruned-emaonly-fp16.safetensors"
+      },
+      "title": "CHECKPOINT SD1.5 fp16 ema-only"
+    },
+    {
+      "id": 3,
+      "type": "LoadImage",
+      "pos": [
+        0,
+        240
+      ],
+      "size": [
+        330,
+        330
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            4
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "factoria_style_reference.png",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "factoria_style_reference.png"
+      },
+      "title": "STYLE REFERENCE (local only)"
+    },
+    {
+      "id": 4,
+      "type": "CLIPVisionLoader",
+      "pos": [
+        0,
+        620
+      ],
+      "size": [
+        330,
+        60
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 2,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CLIP_VISION",
+          "type": "CLIP_VISION",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPVisionLoader"
+      },
+      "widgets_values": [
+        "CLIP-ViT-H-14-laion2B-s32B-b79K.safetensors"
+      ],
+      "widgets_values_named": {
+        "clip_name": "CLIP-ViT-H-14-laion2B-s32B-b79K.safetensors"
+      },
+      "title": "CLIP VISION (muted - UnifiedLoader loads it)"
+    },
+    {
+      "id": 5,
+      "type": "IPAdapterUnifiedLoader",
+      "pos": [
+        420,
+        60
+      ],
+      "size": [
+        330,
+        80
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 1
+        },
+        {
+          "name": "ipadapter",
+          "type": "IPADAPTER",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "links": [
+            2
+          ]
+        },
+        {
+          "name": "ipadapter",
+          "type": "IPADAPTER",
+          "links": [
+            3
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "IPAdapterUnifiedLoader"
+      },
+      "widgets_values": [
+        "PLUS (high strength)"
+      ],
+      "widgets_values_named": {
+        "preset": "PLUS (high strength)"
+      },
+      "title": "IPAdapter loader (weights required)"
+    },
+    {
+      "id": 6,
+      "type": "IPAdapterAdvanced",
+      "pos": [
+        420,
+        260
+      ],
+      "size": [
+        330,
+        260
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 2
+        },
+        {
+          "name": "ipadapter",
+          "type": "IPADAPTER",
+          "link": 3
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 4
+        },
+        {
+          "name": "image_negative",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "attn_mask",
+          "type": "MASK",
+          "link": null
+        },
+        {
+          "name": "clip_vision",
+          "type": "CLIP_VISION",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            5
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "IPAdapterAdvanced"
+      },
+      "widgets_values": [
+        0.75,
+        "style transfer",
+        "average",
+        0.0,
+        1.0,
+        "V only"
+      ],
+      "widgets_values_named": {
+        "weight": 0.75,
+        "weight_type": "style transfer",
+        "combine_embeds": "average",
+        "start_at": 0.0,
+        "end_at": 1.0,
+        "embeds_scaling": "V only"
+      },
+      "title": "IPAdapter apply - STYLE, not identity"
+    },
+    {
+      "id": 7,
+      "type": "CLIPTextEncode",
+      "pos": [
+        840,
+        640
+      ],
+      "size": [
+        430,
+        200
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 6
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            8
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPTextEncode"
+      },
+      "widgets_values": [
+        "stylized voxel 3D character, cuboid block-built body, hard-edged block geometry, blocks of varied sizes, large blocks for silhouette, medium blocks for anatomy and clothing, small blocks for the face and details, compact readable silhouette, modular limbs, pixelated block face, flat hard matte surfaces, no smooth organic sculpting, neutral studio presentation, plain light-grey seamless background, soft even studio light, full body, three-quarter view, orthographic feeling, centered, high detail on block edges | race/species: <fill>, sex: <fill>, body type: <fill>, face: <fill>, clothing: <fill>, armor: <fill>, accessories: <fill>, palette: <fill>, pose: standing neutral, camera: full body three-quarter view"
+      ],
+      "widgets_values_named": {
+        "text": "stylized voxel 3D character, cuboid block-built body, hard-edged block geometry, blocks of varied sizes, large blocks for silhouette, medium blocks for anatomy and clothing, small blocks for the face and details, compact readable silhouette, modular limbs, pixelated block face, flat hard matte surfaces, no smooth organic sculpting, neutral studio presentation, plain light-grey seamless background, soft even studio light, full body, three-quarter view, orthographic feeling, centered, high detail on block edges | race/species: <fill>, sex: <fill>, body type: <fill>, face: <fill>, clothing: <fill>, armor: <fill>, accessories: <fill>, palette: <fill>, pose: standing neutral, camera: full body three-quarter view"
+      },
+      "title": "POSITIVE - style + character"
+    },
+    {
+      "id": 8,
+      "type": "CLIPTextEncode",
+      "pos": [
+        840,
+        900
+      ],
+      "size": [
+        430,
+        200
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            9
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPTextEncode"
+      },
+      "widgets_values": [
+        "smooth plastic, rounded cartoon, anime, photorealistic skin, painterly, soft clay, chibi, fused limbs, Minecraft-style primitive cube-only body, cluttered background, extreme perspective, motion blur, blurry, lowres, watermark, text, signature, deformed hands, extra fingers, extra limbs, melting geometry"
+      ],
+      "widgets_values_named": {
+        "text": "smooth plastic, rounded cartoon, anime, photorealistic skin, painterly, soft clay, chibi, fused limbs, Minecraft-style primitive cube-only body, cluttered background, extreme perspective, motion blur, blurry, lowres, watermark, text, signature, deformed hands, extra fingers, extra limbs, melting geometry"
+      },
+      "title": "NEGATIVE"
+    },
+    {
+      "id": 9,
+      "type": "EmptyLatentImage",
+      "pos": [
+        840,
+        1200
+      ],
+      "size": [
+        330,
+        110
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            10
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "EmptyLatentImage"
+      },
+      "widgets_values": [
+        512,
+        768,
+        1
+      ],
+      "widgets_values_named": {
+        "width": 512,
+        "height": 768,
+        "batch_size": 1
+      }
+    },
+    {
+      "id": 10,
+      "type": "KSampler",
+      "pos": [
+        1320,
+        400
+      ],
+      "size": [
+        300,
+        270
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 5
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 8
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 9
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 10
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            11
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "KSampler"
+      },
+      "widgets_values": [
+        123456789,
+        "fixed",
+        28,
+        7.0,
+        "dpmpp_2m",
+        "karras",
+        1.0
+      ],
+      "widgets_values_named": {
+        "seed": 123456789,
+        "control_after_generate": "fixed",
+        "steps": 28,
+        "cfg": 7.0,
+        "sampler_name": "dpmpp_2m",
+        "scheduler": "karras",
+        "denoise": 1.0
+      },
+      "title": "KSampler"
+    },
+    {
+      "id": 11,
+      "type": "VAEDecode",
+      "pos": [
+        1670,
+        400
+      ],
+      "size": [
+        220,
+        50
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 11
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 12
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            13
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecode"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 12,
+      "type": "SaveImage",
+      "pos": [
+        1940,
+        400
+      ],
+      "size": [
+        430,
+        480
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 13
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SaveImage"
+      },
+      "widgets_values": [
+        "factoria/voxel_style_ipadapter"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "factoria/voxel_style_ipadapter"
+      }
+    }
+  ],
+  "links": [
+    [
+      1,
+      2,
+      0,
+      5,
+      0,
+      "MODEL"
+    ],
+    [
+      2,
+      5,
+      0,
+      6,
+      0,
+      "MODEL"
+    ],
+    [
+      3,
+      5,
+      1,
+      6,
+      1,
+      "IPADAPTER"
+    ],
+    [
+      4,
+      3,
+      0,
+      6,
+      2,
+      "IMAGE"
+    ],
+    [
+      5,
+      6,
+      0,
+      10,
+      0,
+      "MODEL"
+    ],
+    [
+      6,
+      2,
+      1,
+      7,
+      0,
+      "CLIP"
+    ],
+    [
+      7,
+      2,
+      1,
+      8,
+      0,
+      "CLIP"
+    ],
+    [
+      8,
+      7,
+      0,
+      10,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      9,
+      8,
+      0,
+      10,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      10,
+      9,
+      0,
+      10,
+      3,
+      "LATENT"
+    ],
+    [
+      11,
+      10,
+      0,
+      11,
+      0,
+      "LATENT"
+    ],
+    [
+      12,
+      2,
+      2,
+      11,
+      1,
+      "VAE"
+    ],
+    [
+      13,
+      11,
+      0,
+      12,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.55,
+      "offset": [
+        0,
+        0
+      ]
+    },
+    "frontendVersion": "1.58.5"
+  },
+  "version": 0.4
+}

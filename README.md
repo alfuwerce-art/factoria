@@ -24,7 +24,10 @@
 | PREP-01 (Blender / Rigify / skinning / экспорт) | **READY_FOR_REVIEW** — Blender 5.2.4 LTS установлен и проверен, Rigify + auto weights + позы + FBX доказаны на собственной фигуре |
 | Blender | **5.2.4 LTS** → `D:\programs\Blender\5.2\blender.exe` (SHA-256 сверен, PATH не менялся) |
 | Rigify | **0.6.10**, встроенный; генерирует rig (160 deform + 546 control), skinning работает |
-| ComfyUI | **0.45.0 portable** → `D:\programs\ComfyUI\` (SHA-256 сверен, 4.25 ГБ); сервер/UI/API/workflow без моделей/CUDA проверены; **весов моделей нет** |
+| ComfyUI | **0.45.0 portable** → `D:\programs\ComfyUI\` (SHA-256 сверен, 5.75 ГБ после COMFY-STYLE-02); сервер/UI/API/CUDA проверены |
+| ComfyUI custom nodes | **Manager 4.2.2** (PyPI), **Crystools 1.27.4**, **IPAdapter_plus**, **controlnet_aux**, **rgthree-comfy** — установлены, импорт без ошибок |
+| SD 1.5 checkpoint | `v1-5-pruned-emaonly-fp16.safetensors` (2.03 ГБ, CreativeML OpenRAIL-M) — единственный чекпоинт; веса IPAdapter/ControlNet **не скачаны** (список в отчёте) |
+| FACTORIA VOXEL_STYLE | 3 готовых workflow + prompt-контракт → `workflows/factoria_voxel_style/`; запуск `scripts/comfyui/launch_safe_baseline.bat` |
 | Git / remote | `origin` = `alfuwerce-art/factoria.git`; рабочая ветка `factory/work`; `main` не изменяется исполнителем |
 | Режим DSH | **CubeGame Factory** (`cubegame-factory`) — выбирается при создании нового чата |
 
@@ -96,6 +99,39 @@ $env:BLENDER_USER_CONFIG="D:\Projects\CubeGame Factory\environments\blender\conf
 `outputs\prototypes\orc_02\run1\` с GLB, `descriptor.json`, `validation.json`, `.blend` и тремя PNG.
 **Важно:** исходный Alpha-контент read-only и в git не публикуется; результат — `PARTIAL`
 (см. `docs/tasks/ORC02_RUN_REPORT.md`), визуальной приёмки нет.
+
+---
+
+## Как воспроизвести COMFY-STYLE-02/03 (FACTORIA VOXEL_STYLE)
+
+```powershell
+# 1. Запуск ComfyUI в SAFE_BASELINE (--novram, минимум VRAM) — двойной клик или:
+& "D:\Projects\CubeGame Factory\scripts\comfyui\launch_safe_baseline.bat"
+#    второй режим, если RAM/VRAM не укладываются:
+& "D:\Projects\CubeGame Factory\scripts\comfyui\launch_cpu_fallback.bat"
+
+# 2. Запуск с замером idle RAM/VRAM (без генерации)
+powershell -NoProfile -ExecutionPolicy Bypass -File `
+    "D:\Projects\CubeGame Factory\scripts\comfyui\factoria_launch.ps1" -Preset safe -MeasureIdle
+
+# 3. Пересборка и серверная валидация workflow (после правки prompt-контракта)
+$py = 'D:\programs\ComfyUI\python_embeded\python.exe'
+& $py -s "D:\Projects\CubeGame Factory\scripts\comfyui\build_factoria_voxel_workflows.py" `
+    --object-info "D:\Projects\CubeGame Factory\measurements\comfyui_object_info_2026-11-13_full.json" `
+    --config "D:\Projects\CubeGame Factory\workflows\factoria_voxel_style\voxel_style_prompt_v1.json" `
+    --out "D:\Projects\CubeGame Factory\workflows\factoria_voxel_style"
+& $py -s "D:\Projects\CubeGame Factory\scripts\comfyui\validate_factoria_workflows.py" `
+    --comfy "D:\programs\ComfyUI\ComfyUI" `
+    --workflow-dir "D:\Projects\CubeGame Factory\workflows\factoria_voxel_style" `
+    --report "D:\Projects\CubeGame Factory\measurements\factoria_voxel_style_validation.json"
+```
+
+UI — <http://127.0.0.1:8188>, workflow: `Workflow → Open` →
+`workflows\factoria_voxel_style\FACTORIA_VOXEL_STYLE_BASE.json`. Инструкция владельцу —
+`workflows\factoria_voxel_style\README.md`. Отчёт этапа — `docs/tasks/COMFY-STYLE-02_03_RUN_REPORT.md`.
+
+**Найденная ловушка:** launcher'ы обязаны выставлять `PYTHONUTF8=1`/`PYTHONIOENCODING=utf-8`,
+иначе rgthree-comfy печатает emoji и сервер падает `UnicodeEncodeError` на cp1251-консоли.
 
 ---
 ## Как воспроизвести PREP-03 (ComfyUI)

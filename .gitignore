@@ -40,8 +40,7 @@ samples/**/*.glb
 *.log
 
 # ОС / редакторы
-Thumbs.db
-desktop.ini
+Thumbs.dbdesktop.ini
 .vs/
 .vscode/
 *.swp
@@ -61,3 +60,7 @@ outputs/prototypes/orc_02r/**/*.glb
 outputs/prototypes/orc_02r/**/*.blend
 outputs/prototypes/orc_02r/**/*.blend1
 outputs/prototypes/orc_02r/**/*.png
+
+# COMFY-STYLE: полный снимок /api/object_info генерируется заново с сервера (2.3 МБ),
+# в git идёт только урезанный контракт используемых нод
+measurements/comfyui_object_info_*_full.json

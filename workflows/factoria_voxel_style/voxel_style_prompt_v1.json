@@ -1,0 +1,81 @@
+{
+  "id": "FACTORIA_VOXEL_STYLE_PROMPT_V1",
+  "version": "1.0",
+  "date": "2026-11-13",
+  "stage": "COMFY-STYLE-02/03",
+  "purpose": "Fixed style contract for Factoria voxel/cuboid character concept images (SD1.5). Style is locked by this text block plus an optional IPAdapter style reference; only the character block changes between characters.",
+  "style_prefix": "stylized voxel 3D character, cuboid block-built body, hard-edged block geometry, blocks of varied sizes, large blocks for silhouette, medium blocks for anatomy and clothing, small blocks for the face and details, compact readable silhouette, modular limbs, pixelated block face, flat hard matte surfaces, no smooth organic sculpting, neutral studio presentation, plain light-grey seamless background, soft even studio light, full body, three-quarter view, orthographic feeling, centered, high detail on block edges",
+  "character_block_fields": {
+    "race_species": "",
+    "sex": "",
+    "body_type": "",
+    "face_traits": "",
+    "clothing": "",
+    "armor": "",
+    "accessories": "",
+    "palette": "",
+    "pose": "",
+    "camera": ""
+  },
+  "character_block_template": "{race_species}, {sex}, {body_type}, face: {face_traits}, clothing: {clothing}, armor: {armor}, accessories: {accessories}, palette: {palette}, pose: {pose}, camera: {camera}",
+  "prompt_template": "{style_prefix} | {character_block}",
+  "prompt_example_placeholder": "Set the character block in the workflow node \"POSITIVE - style + character\". Replace the text between the two | markers. Keep the style prefix unchanged. Do not write an Orc unless the owner asks for one.",
+  "negative_prompt": "smooth plastic, rounded cartoon, anime, photorealistic skin, painterly, soft clay, chibi, fused limbs, Minecraft-style primitive cube-only body, cluttered background, extreme perspective, motion blur, blurry, lowres, watermark, text, signature, deformed hands, extra fingers, extra limbs, melting geometry",
+  "style_lock_invariants": [
+    "voxel/cuboid visual language",
+    "block size hierarchy (large silhouette blocks, medium anatomy/clothing blocks, small face/detail blocks)",
+    "level of face detail (block eyes/jaw, no smooth facial features)",
+    "hard-edged forms, no rounded smoothing",
+    "proportions character (compact readable silhouette, modular limbs)",
+    "clean studio presentation, plain background",
+    "no smooth cartoon plasticity"
+  ],
+  "style_variables": [
+    "race/species",
+    "face",
+    "clothing",
+    "armor",
+    "accessories",
+    "colors/palette",
+    "body type"
+  ],
+  "generation_defaults": {
+    "checkpoint": "v1-5-pruned-emaonly-fp16.safetensors",
+    "width": 512,
+    "height": 768,
+    "batch_size": 1,
+    "steps": 28,
+    "cfg": 7.0,
+    "sampler_name": "dpmpp_2m",
+    "scheduler": "karras",
+    "denoise": 1.0,
+    "seed": 123456789
+  },
+  "ipadapter_reference": {
+    "mode": "style, not identity",
+    "goal": "transfer the voxel visual language (block hierarchy, face detail level, hardness, presentation) - not the Orc himself",
+    "reference_location": "local only: ComfyUI/input/ (never committed to git, never embedded in public workflows)",
+    "expected_input_filename": "factoria_style_reference.png",
+    "preset": "PLUS (high strength)",
+    "weight": 0.75,
+    "weight_type": "style transfer",
+    "combine_embeds": "average",
+    "start_at": 0.0,
+    "end_at": 1.0,
+    "embeds_scaling": "V only"
+  },
+  "controlnet_plan": {
+    "status": "prepared, weights not downloaded yet",
+    "use_cases": [
+      "Canny / Lineart for silhouette",
+      "OpenPose / DWPose for pose",
+      "Depth when needed"
+    ],
+    "default_state_in_template": "bypassed (mode 4) - must stay optional for base generation"
+  },
+  "notes": [
+    "This file is the single source of truth for the style text. Workflows embed its values; if the text changes, rebuild the workflows with scripts/comfyui/build_factoria_voxel_workflows.py.",
+    "Do not add the Orc reference image or any owner-supplied asset to the repository.",
+    "LoRA training is explicitly out of scope for this stage."
+  ]
+}

@@ -13,6 +13,57 @@
 | 2 | 2026-11-13 | **ComfyUI** (portable, NVIDIA) | **0.45.0** (torch 2.14.1+cu130, embedded python 3.13.14) | `https://github.com/Comfy-Org/ComfyUI/releases/download/v0.45.0/ComfyUI_windows_portable_nvidia.7z` (2 071 479 423 Б) | GPL-3.0 | `D:\programs\ComfyUI\` (portable, 4.25 ГБ, 63 891 файл) | AI-инфраструктура для будущих шагов (PREP-03/05): запуск локальных моделей и workflows | **INSTALLED + SMOKE_PASS (runtime/api)** — SHA-256 совпал, сервер стартует, UI 200, workflow без моделей выполнен, PNG сохранён (`logs\PREP-03_*`); AI-модели НЕ проверялись |
 | 3 | 2026-11-13 | **7-Zip (7zr.exe)** | 26.04 (x86 CLI) | `https://www.7-zip.org/a/7zr.exe` (602 624 Б) | Public domain | `D:\programs\_installers\7zr.exe` (один файл, без установки, PATH не менялся) | распаковка официального `.7z` ComfyUI (системного 7-Zip нет, WinRAR-триал не используется) | **INSTALLED** — распаковал архив, `Everything is Ok` |
 
+### COMFY-STYLE-02 — custom nodes для существующего ComfyUI (2026-11-13)
+
+Ставились в **уже существующий** portable `D:\programs\ComfyUI\` (второй экземпляр не создавался).
+Глобальный Python/PATH/CUDA/драйвер не менялись; все pip-установки — только в `python_embeded`.
+
+| # | Нода / пакет | Версия / commit | Источник | Лицензия | Куда | Результат |
+|---|---|---|---|---|---|---|
+| 4 | **ComfyUI-Manager** | `comfyui_manager==4.2.2` (pin из `ComfyUI\manager_requirements.txt` самого релиза) | PyPI, официальный пакет Comfy-Org | GPL-3.0 | `python_embeded\Lib\site-packages\comfyui_manager` (отдельного каталога в `custom_nodes` не создаёт — дубликата нет) | **INSTALLED**; pip-зависимости: GitPython, PyGithub, PyJWT, PyNaCl, cryptography, uv, toml, chardet — torch не тронут |
+| 5 | **ComfyUI-Crystools** | 1.27.4, commit `2f18256` | `github.com/crystian/ComfyUI-Crystools` (MIT по GitHub API) | MIT | `ComfyUI\custom_nodes\ComfyUI-Crystools` (5.3 МБ) | **INSTALLED**; из лога: `Crystools version: 1.27.4`, GPU/CPU/драйвер распознаны |
+| 6 | **ComfyUI_IPAdapter_plus** | commit `a0f451a` | `github.com/cubiq/ComfyUI_IPAdapter_plus` (GPL-3.0) | GPL-3.0 | `ComfyUI\custom_nodes\ComfyUI_IPAdapter_plus` (0.8 МБ) | **INSTALLED**; своих pip-зависимостей нет; ноды `IPAdapterUnifiedLoader` / `IPAdapterAdvanced` / `IPAdapterModelLoader` видны в `/object_info` |
+| 7 | **comfyui_controlnet_aux** | commit `a587a4c` | `github.com/Fannovel16/comfyui_controlnet_aux` (Apache-2.0) | Apache-2.0 | `ComfyUI\custom_nodes\comfyui_controlnet_aux` (47.1 МБ) | **INSTALLED**; препроцессоры `Canny`, `LineArtPreprocessor`, `DWPreprocessor`, `DepthAnythingPreprocessor` в `/object_info`; `DWPose: Onnxruntime with acceleration providers detected` |
+| 8 | **rgthree-comfy** | commit `bc48c6a` | `github.com/rgthree/rgthree-comfy` (MIT) | MIT | `ComfyUI\custom_nodes\rgthree-comfy` (6.6 МБ) | **INSTALLED**; лог: `[rgthree-comfy] Loaded 48 exciting nodes` |
+| 9 | **hf_xet** | 1.7.0 | уже в поставке portable, установка не потребовалась | Apache-2.0 | `python_embeded\Lib\site-packages` | не ставился (проверено `pip list`) |
+
+**Зависимости custom nodes (pip, только в `python_embeded`), с ограничениями из
+`scripts\comfyui\constraints_comfyui_embedded.txt`** (torch 2.14.1+cu130, torchvision 0.29.1+cu130,
+numpy 2.5.4, transformers 5.21.0 зафиксированы, чтобы ноды не подменили CUDA-сборку):
+
+- Crystools: `deepdiff`, `pynvml`/`nvidia-ml-py`, `py-cpuinfo`, `piexif`, `cachebox`, `orderly-set`;
+- controlnet_aux: `opencv-python` 5.0.0.93, `opencv-contrib-python`, `mediapipe` 1.2.3, `onnxruntime-gpu`
+  1.32.0 (157.8 МБ), `scikit-image`, `scikit-learn`, `trimesh`, `rtree`, `albumentationsx`, `matplotlib`,
+  `omegaconf`, `addict`, `yacs`, `absl-py`, `protobuf`, `imageio`, `tifffile`, `sounddevice`, `flatbuffers`.
+
+**Проверка после установки:** `pip check` не находит конфликтов среди установленных нами пакетов;
+единственные предупреждения — отсутствующие необязательные `comfyui-workflow-templates-media-*`
+(это часть штатной поставки portable, к нашим установкам не относится). `torch 2.14.1+cu130`
+и `torch.cuda.is_available()=True` после всех установок сохранены.
+
+**Итог по диску:** `D:\programs\ComfyUI\` 4.25 ГБ → **5.75 ГБ** (после нод и зависимостей);
+свободно на D: 631.7 ГБ.
+
+### COMFY-STYLE-02/03 — базовый checkpoint SD 1.5 (2026-11-13)
+
+| # | Инструмент | Версия | Источник | Лицензия | Куда | Причина | Результат |
+|---|---|---|---|---|---|---|---|
+| 10 | **Stable Diffusion v1.5 fp16 ema-only** | `v1-5-pruned-emaonly-fp16.safetensors` (FP16-конверсия hash-идентичной оригинальной модели) | HF `Comfy-Org/stable-diffusion-1.5` (архив удалённого `runwayml/stable-diffusion-v1-5`), URL `.../resolve/main/v1-5-pruned-emaonly-fp16.safetensors` | **CreativeML OpenRAIL-M** | `D:\programs\ComfyUI\ComfyUI\models\checkpoints\` | единственный чекпоинт для фиксации voxel-стиля (FACT-D19) | **INSTALLED + SHA-256 СОВПАЛ** |
+
+**Проверка целостности:**
+
+| Параметр | Значение |
+|---|---|
+| Размер | 2 132 696 762 Б (2.03 ГБ) |
+| SHA-256 опубликованный (LFS OID на HF) | `e9476a13728cd75d8279f6ec8bad753a66a1957ca375a1464dc63b37db6e3916` |
+| SHA-256 вычисленный | `e9476a13728cd75d8279f6ec8bad753a66a1957ca375a1464dc63b37db6e3916` |
+| Совпадение | **ДА** |
+| Структура (safetensors) | 1145 тензоров: UNet 686, VAE 248, CLIP 197; dtype F16; metadata `modelspec.*` |
+| Загрузка движком ComfyUI (CPU, без сэмплинга) | PASS — `BaseModel`, 859 520 964 параметров, VAE+CLIP присутствуют, 1.1 с, +2.1 ГБ RAM, VRAM 0 |
+| Загрузка (способ) | HF режет одиночный поток до 20–100 КБ/с → файл докачан параллельными диапазонами (`scripts\comfyui\fetch_checkpoint_parallel.ps1`) с проверкой размера каждой части |
+| Веса, которые **не** скачивались | IPAdapter (`ip-adapter-plus_sd15` 98 МБ), CLIP Vision ViT-H (2.5 ГБ), ControlNet v1.1 fp16 (3×0.69 GiB) — список с SHA-256 в `docs/tasks/COMFY-STYLE-02_03_RUN_REPORT.md` §6 |
+
+
 **Проверка целостности загрузки:**
 
 | Параметр | Значение |

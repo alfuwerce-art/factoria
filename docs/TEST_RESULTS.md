@@ -288,6 +288,119 @@ next_action: >
 
 ---
 
+## COMFY-STYLE-02/03 — ComfyUI под FACTORIA VOXEL_STYLE
+
+```yaml
+id: COMFY-STYLE-02/03
+status: READY_FOR_REVIEW     # установка/ноды/чекпоинт/launch/валидация workflow доказаны;
+                             # художественной генерации и пиковых замеров НЕ было (запрещено на этапе)
+machine: WINDOWS_11
+software: ComfyUI 0.45.0 portable + custom nodes + SD 1.5 fp16
+version: ComfyUI 0.45.0, frontend 1.58.5, python 3.13.14 (embedded), torch 2.14.1+cu130, CUDA 13.0
+source_url: >
+  checkpoint: https://huggingface.co/Comfy-Org/stable-diffusion-1.5/resolve/main/v1-5-pruned-emaonly-fp16.safetensors
+  nodes: PyPI comfyui_manager==4.2.2; github crystian/ComfyUI-Crystools@2f18256,
+         cubiq/ComfyUI_IPAdapter_plus@a0f451a, Fannovel16/comfyui_controlnet_aux@a587a4c,
+         rgthree/rgthree-comfy@bc48c6a
+license: checkpoint CreativeML OpenRAIL-M; Manager GPL-3.0; Crystools MIT; IPAdapter_plus GPL-3.0;
+         controlnet_aux Apache-2.0; rgthree MIT
+install_location: D:\programs\ComfyUI (portable; 4.25 ГБ → 5.75 ГБ после установки нод)
+download_sha256: e9476a13728cd75d8279f6ec8bad753a66a1957ca375a1464dc63b37db6e3916
+sha256_verified: YES (2 132 696 762 Б, файл downloaded частями и сверен целиком)
+sample_asset: собственные workflow FACTORIA_VOXEL_STYLE_* + prompt-контракт; изображений не генерировалось
+command: |
+  # запуск (два режима)
+  scripts\comfyui\launch_safe_baseline.bat          # --novram --reserve-vram 5
+  scripts\comfyui\launch_cpu_fallback.bat           # --cpu
+  powershell -File scripts\comfyui\factoria_launch.ps1 -Preset safe -MeasureIdle
+
+  # сборка + серверная валидация workflow
+  python_embeded\python.exe -s scripts\comfyui\build_factoria_voxel_workflows.py `
+      --object-info measurements\comfyui_object_info_2026-11-13_full.json `
+      --config workflows\factoria_voxel_style\voxel_style_prompt_v1.json `
+      --out workflows\factoria_voxel_style
+  python_embeded\python.exe -s scripts\comfyui\validate_factoria_workflows.py `
+      --comfy D:\programs\ComfyUI\ComfyUI --workflow-dir workflows\factoria_voxel_style `
+      --report measurements\factoria_voxel_style_validation.json
+
+  # проверка чекпоинта без генерации
+  python_embeded\python.exe -s scripts\comfyui\check_sd15_checkpoint.py <ckpt>
+  set FACTORIA_CKPT=<ckpt> && python_embeded\python.exe -s scripts\comfyui\load_checkpoint_probe.py
+input: |
+  prompt-контракт voxel_style_prompt_v1.json; локальный style reference (у владельца, в git не попадает)
+output: |
+  workflows\factoria_voxel_style\FACTORIA_VOXEL_STYLE_{BASE,IPADAPTER,CONTROL_TEMPLATE}.json
+  workflows\factoria_voxel_style\voxel_style_prompt_v1.json
+  measurements\comfyui_object_info_2026-11-13_full.json
+  measurements\factoria_voxel_style_build_report.json
+  measurements\factoria_voxel_style_validation.json
+  logs\COMFY-STYLE_*.log
+checks:
+  - name: Существующий ComfyUI найден, второй не устанавливался
+    result: PASS  (D:\programs\ComfyUI 0.45.0, portable; embedded python 3.13.14, torch 2.14.1+cu130)
+  - name: PIP-установка нод не сломала CUDA-сборку torch
+    result: PASS  (constraints-файл; после установок torch 2.14.1+cu130, cuda.is_available()=True)
+  - name: Импорт custom nodes без ошибок
+    result: PASS  (нет IMPORT FAILED; Crystools 1.27.4, rgthree 48 нод, 1213 типов нод в /object_info)
+  - name: Web UI и API
+    result: PASS  (GET / → 200, 19 885 Б; /api/object_info, /system_stats работают)
+  - name: Crystools мониторинг
+    result: PASS  (/crystools/monitor/GPU → RTX 4060 Laptop; /HDD → C:, D:; ws-событие crystools.monitor)
+  - name: Checkpoint скачан и сверен
+    result: PASS  (2 132 696 762 Б, SHA-256 = e9476a13…3916, safetensors 1145 тензоров: UNet 686, VAE 248, CLIP 197, dtype F16)
+  - name: Checkpoint загружается движком ComfyUI (без сэмплинга, CPU)
+    result: PASS  (load 1.1 с; BaseModel 859 520 964 параметров; VAE и CLIP присутствуют; +2.1 ГБ RAM, VRAM 0)
+  - name: Checkpoint детектируется в UI
+    result: PASS  (CheckpointLoaderSimple.ckpt_name = ["v1-5-pruned-emaonly-fp16.safetensors"])
+  - name: SAFE_BASELINE (--novram) запускается
+    result: PASS  (ready 11.2–11.7 с; device cuda:0; WS 1025–1026 MB; VRAM +76…79 MiB)
+  - name: CPU_FALLBACK (--cpu) запускается
+    result: PASS  (ready 11.2 с; device cpu; WS 934 MB; VRAM ≈0; лог Crystools «CUDA is available, but torch is using CPU»)
+  - name: Workflow принимаются валидатором ComfyUI
+    result: PASS  (BASE: validate_prompt PASS, 7 нод, output SaveImage; IPADAPTER/CONTROL: структурно PASS, упираются только в отсутствующий локальный reference)
+  - name: Художественная генерация / пиковые замеры
+    result: NOT_TESTED  (запрещено этапом: делается владельцем после отчёта)
+issues:
+  - rgthree-comfy печатает emoji → при перенаправленном stdout на cp1251 сервер падал UnicodeEncodeError; лечится PYTHONUTF8=1/PYTHONIOENCODING=utf-8
+  - IPAdapter/ControlNet веса не скачивались (сознательно): IPADAPTER/CONTROL workflow не запускаются до их установки
+  - single-stream скачивание с HF на этой машине временами падало до 20–60 КБ/с; чекпоинт докачан параллельными диапазонами
+next_action: >
+  Владелец: запустить SAFE_BASELINE, открыть FACTORIA_VOXEL_STYLE_BASE.json, заполнить character block,
+  Queue, замерить RAM/VRAM через Crystools. Затем решить по весам IPAdapter (CLIP Vision 2.5 ГБ + ip-adapter-plus 98 МБ)
+  и повторить с style reference.
+```
+
+**Измеренные величины (idle, без генерации, 2026-11-13)**
+
+| Метрика | SAFE_BASELINE (`--novram --reserve-vram 5`) | CPU_FALLBACK (`--cpu`) |
+|---|---|---|
+| Готовность сервера (тёплый старт) | 11.2–11.7 с | 11.2 с |
+| Рабочий набор процесса ComfyUI | **1025–1026 МБ** | **934 МБ** |
+| Свободная RAM до / после | 17.58 → 16.57 ГБ | 17.62 → 16.70 ГБ |
+| VRAM всей карты до / после | 1476 → 1555 MiB (**+79 MiB**) | 1480 → 1473 MiB (≈0) |
+| Устройство torch | `cuda:0 RTX 4060 Laptop` | `cpu` |
+| Загрузка чекпоинта (CPU, без сэмплинга) | — | 1.1 с, +2.1 ГБ RAM, VRAM 0 |
+
+**Карточка памяти локального AI (§4.1 AGENTS.md)**
+
+| Параметр | Факт |
+|---|---|
+| Название / версия | SD 1.5 fp16 ema-only `v1-5-pruned-emaonly-fp16.safetensors` в ComfyUI 0.45.0 |
+| Источник / лицензия | HF `Comfy-Org/stable-diffusion-1.5` (архив `runwayml/stable-diffusion-v1-5`); CreativeML OpenRAIL-M |
+| Вес / диск | 2.03 ГБ (2 132 696 762 Б); ComfyUI после всех установок 5.75 ГБ |
+| Настройки запуска | `--novram --reserve-vram 5` (SAFE_BASELINE) / `--cpu` (CPU_FALLBACK); порт 8188; `PYTHONUTF8=1` |
+| RAM / VRAM | idle: 1025 МБ RAM / +79 MiB VRAM; загрузка чекпоинта: +2.1 ГБ RAM / 0 VRAM (CPU); **пик генерации не измерен** |
+| Время | старт 11.2–11.7 с; загрузка чекпоинта 1.1 с; время генерации не измерялось |
+| Выход / качество | изображений не генерировалось — выход этапа это готовый инструмент (workflow + launcher) |
+| Проблемы | нет OOM/подкачки; веса IPAdapter/ControlNet отсутствуют; WDDM не даёт per-process VRAM |
+| Статус | **READY_FOR_REVIEW** (инструмент готов, художественная пригодность стиля не проверена) |
+
+**Чего этот тест НЕ доказывает:** что стиль держится между персонажами; качество concept-изображений;
+пиковый расход RAM/VRAM при генерации; работоспособность IPAdapter/ControlNet без их весов; отображение
+workflow на канвасе в браузере (проверена структура и серверная валидация, не рендеринг UI).
+
+---
+
 ## ORC-02R — процедурная генерация НОВОЙ модели Orc (2026-11-13, итерация `MODEL_REWORK`)
 
 ```yaml
