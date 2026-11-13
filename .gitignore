@@ -49,3 +49,8 @@ desktop.ini
 # Blender user-config лаборатории (машинно-специфично, не публикуется)
 environments/blender/
 
+# ORC-02: производные от закрытого Alpha контента — только локально, НЕ публиковать
+outputs/prototypes/orc_02/**/*.glb
+outputs/prototypes/orc_02/**/*.blend
+outputs/prototypes/orc_02/**/*.blend1
+outputs/prototypes/orc_02/**/*.png

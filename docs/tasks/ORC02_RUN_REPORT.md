@@ -11,7 +11,7 @@
 | Параметр | Значение |
 |---|---|
 | SOURCE_ID | `CubeGame/.scratch/content/actors/d86_kind_0x0b_formula` (Alpha kind `0x0b`, OrcMale) |
-| SOURCE_RIGHTS | Alpha-производная геометрия CubeGame. Использование: локальный read-only вход для Factoria. **Не публиковать**, не считать коммерчески очищенной |
+| SOURCE_RIGHTS | Alpha-производная геометрия CubeGame. Использование: локальный read-only вход для Factoria. **Не публиковать**, не считать коммерчески очищенной. Производные меши (GLB/BLEND/PNG) в git **не попадают**: `.gitignore` исключает `outputs/prototypes/orc_02/**/*.glb|blend|blend1|png`; публикуются только код, конфиг, отчёты, `descriptor.json` и `validation.json` (метаданные без геометрии) |
 | SOURCE_HASH (rig.json) | `d223eb3b63f8b17c4993d429e02a57bc531a2f1437e6328783f5b0f632905363` |
 | Модели (7 частей) | `body.cubdec` (10×8×10), `head.cubdec` (18×20×16), `hair.cubdec` (18×20×20), `hand_l/r.cubdec` (5×6×4), `foot_l/r.cubdec` (5×8×4) |
 | Формат | `.cubdec` — `int32 w, d, h` + RGB-тройки, индекс `((z*d+y)*w+x)`; правило из `VoxelMesh.cs` |
@@ -94,7 +94,7 @@ $env:BLENDER_USER_CONFIG="D:\Projects\CubeGame Factory\environments\blender\conf
 scripts/orc02/run_orc02.py                    конвейер (stdlib, без AI/GPU)
 scripts/orc02/configs/orc_profile.json        профиль orc: размещение, split, детализация, масштабы
 scripts/blender/orc02_validate.py             headless-валидация + .blend + round-trip + 3 вида
-outputs/prototypes/orc_02/run1/               GLB, descriptor.json, validation.json, blender/*
+outputs/prototypes/orc_02/run1/               GLB, descriptor.json, validation.json, blender/* `⚠ локально, в git не публикуется`
 outputs/prototypes/orc_02/run2/               второй прогон (доказательство детерминизма)
 outputs/prototypes/orc_02/alt/                прогон с изменённым конфигом
 logs/ORC-02_blender_run1_2026-11-13.txt       лог Blender-стадии
