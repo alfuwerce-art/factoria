@@ -1,7 +1,9 @@
 # ORC MODULAR PILOT — 2026-11-13
 
-**State:** TECHNICAL_GEOMETRY_TESTED / BLENDER_LOCAL_NOT_TESTED / VISUAL_NOT_APPROVED.  
+**State:** TECHNICAL_GEOMETRY_TESTED / **BLENDER_LOCAL_VALIDATED (2026-11-13, ORC-01)** / VISUAL_NOT_APPROVED.  
 **Priority:** owner authorized beginning a one-character prototype now. This is an **exception for one isolated experimental model**, not authorization to start M1, edit CubeGame, import closed Alpha assets, or launch production batches.
+
+> **Локальная проверка выполнена:** см. [ORC01_LOCAL_VALIDATION.md](ORC01_LOCAL_VALIDATION.md) — генератор отработал на Windows, GLB импортирован в Blender 5.2.4 (20 независимых модулей), `.blend` сохранён и переоткрыт, GLB round-trip без потерь, три вида отрендерены. Найдены и минимально исправлены два дефекта (пересечение 4 стыков конечностей; `COLOR_0` без `normalized`). Визуальной приёмки нет.
 
 ## Tested independent prototype
 

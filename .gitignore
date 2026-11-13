@@ -31,6 +31,7 @@ weights/
 outputs/**/*.blend1
 outputs/**/*.fbx
 outputs/**/*.glb
+!outputs/prototypes/**/*.glb
 outputs/**/*.gltf
 samples/**/*.fbx
 samples/**/*.glb

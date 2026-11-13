@@ -1,8 +1,8 @@
 # CubeGame Asset & Animation Factory Lab — межчатовая память
 
 **Документ:** `03_FACTORY_PROJECT_MEMORY.md`  
-**Версия:** 1.5 · 13.11.2026  
-**Статус:** `PREP-00 = READY_FOR_REVIEW`, `PREP-01 = READY_FOR_REVIEW` (Blender/Rigify/skinning/FBX доказаны), **`PREP-03 = PARTIAL`** (ComfyUI установлен, runtime/API проверены; AI-модели не тестировались), PREP-02 не начат. GitHub-миграция в `alfuwerce-art/factoria` выполнена и проверена.  
+**Версия:** 1.6 · 13.11.2026  
+**Статус:** `PREP-00 = READY_FOR_REVIEW`, `PREP-01 = READY_FOR_REVIEW` (Blender/Rigify/skinning/FBX доказаны), **`PREP-03 = PARTIAL`** (ComfyUI установлен, runtime/API проверены; AI-модели не тестировались), **`ORC-01 = READY_FOR_REVIEW`** (технический прототип проверен в Blender, художественной приёмки нет), PREP-02 не начат. GitHub-миграция в `alfuwerce-art/factoria` выполнена и проверена.  
 **Рабочая папка (действующая):** `D:\Projects\CubeGame Factory\` — единый канонический каталог проекта. Содержит четыре документа, `CHAT_ROUTING.md`, журналы `docs/`, доказательства `logs/`, скрипты `scripts/`, выходы `outputs/`, `references/cubegame-m1/`, `workflows/`, пресет `plugins/` и git-репозиторий (ветки `main` / `factory/work`, remote `origin` = Factoria). Ранее созданный `D:\Projects\CubeGameFactoryLab` **SUPERSEDED**: архив прошлой сессии.  
 **Исполнитель:** DeepSeek Harness.  
 **Назначение:** сохранять между чатами фактическое состояние независимой Factory Lab, утверждённые решения, установки, результаты тестов, проблемы и точку продолжения. **Этот файл обновляется исполнителем после каждого завершённого пакета работы и перед передачей в другой чат.** Обязательные правила исполнителя находятся в `AGENTS.md` (четвёртый служебный файл, а не замена одного из трёх основных документов).
@@ -99,6 +99,9 @@
 - **GitHub (Factoria) 2026-11-13:** remote `origin` = `https://github.com/alfuwerce-art/factoria.git`. Истории локальная и удалённая были **не связаны** (`merge-base` пуст) — объединено через `git merge origin/factory/work --allow-unrelated-histories`; конфликт был только в `README.md` (add/add), взят локальный README + добавлен раздел о маршрутизации. Merge-коммит `8395409`, push `ca5bfef..8395409`; проверено: `HEAD == origin/factory/work`, `git diff` пустой, на remote 47 файлов. `main` в Factoria не изменялся.
 - **УСТАНОВЛЕНО 2026-11-13 (PREP-03):** **ComfyUI 0.45.0 portable NVIDIA** из официального GitHub release (`.7z`, 2 071 479 423 Б, SHA-256 `60c12e8c…a6f` совпал) → `D:\programs\ComfyUI\` (4.25 ГБ, 63 891 файл, изолированный `python_embeded` 3.13.14, torch **2.14.1+cu130**, CUDA runtime 13.0). Распаковано официальным `7zr.exe` 26.04 (public domain, один файл в `D:\programs\_installers\`). PATH и системный Python не менялись, CUDA Toolkit не ставился, **веса моделей не скачивались**.
 - **Измерено в PREP-03:** тёплый старт сервера 10.7–11.8 с, **первый холодный старт ~146 с** (миграция SQLite + скан ассетов); smoke-граф `EmptyImage → SaveImage` без моделей — 1.0 с, PNG 96×96 сохранён и скачан через `/view`. Пик RAM процесса ComfyUI **972 МБ** (GPU-режим) / **859 МБ** (CPU-режим), свободная RAM 19.4 → минимум 18.4 ГБ. Прирост VRAM всей карты при инициализации **≈ +86 МБ** (nvidia-smi на WDDM не отдаёт per-process память). CUDA-проверка встроенного torch: RTX 4060 Laptop, capability 8.9, matmul 2048² за 0.12 с, пик allocated 56.1 МБ / reserved 68 МБ.
+- **ORC-01 (2026-11-13):** переданный архив найден как `C:\Users\bow\Downloads\FACTORIA_ORC_01_package.zip` (78 966 Б, SHA-256 `db27a186…2c1d`) — имя отличалось от `factoria_orc_prototype.zip`, содержимое совпало с описанием пилота. Генератор `scripts/voxel/orc_prototype.py` (stdlib) отработал локально за **0.18 с / 12.9 МБ RAM**: 211 боксов, 20 модулей, 2532 треугольника, 1688 вершин, GLB 71 904 Б. **Повторяемость:** два прогона с seed 17 дают одинаковый SHA-256; исходный (до правок) генератор воспроизвёл переданный GLB **байт-в-байт** (`a6b0b871…dd3e`); seed 23 даёт другой файл.
+- **ORC-01 дефекты (найдены и минимально исправлены):** (1) 4 стыка конечностей без зазора (боксы `upper_arm↔forearm` L/R и `shin↔foot` L/R пересекались) — подняты/уменьшены висячие кубы и сдвинута голень; (2) `COLOR_0` в GLB без `"normalized": true` — Blender читал все цвета как белые; флаг добавлен. После правок: 0 issues у сгенерированного GLB, зазоры 0.020–0.045 м, 60 различных RGBA8.
+- **ORC-01 проверка в Blender 5.2.4:** импорт 20 независимых mesh-объектов (0.1 с), 1688 вершин/2532 треугольника, вырожденных граней нет, 1 материал `voxel_vertex_colors` (unlit: Color Attribute → Emission), габариты 2.09 × 0.9357 × 3.13 м (Y-up → Z-up корректен), сдвиг `forearm_L` не двигает другие модули (дельта 0.0 м), `.blend` 118 424 Б сохранён и **переоткрыт**, GLB round-trip без потерь (20 объектов, 2532 треугольника, позиции вершин совпадают, цвета сохранены), три вида отрендерены (Cycles CPU). Ресурсы: пик RAM Blender **281–315 МБ**, VRAM не расходовалась.
 - **Обнаруженное ПО (факт, версии и пути):** Python 3.13.14 (`C:\Users\bow\AppData\Local\Programs\Python\Python313\python.exe`, в PATH по умолчанию; второй 3.14.6 через `py`), pip 26.1.2, Git 2.55.0, VS Code 1.145.2, Unity Hub 3.22.5, Unity **6000.3.27f2** (`D:\Unity\Hub\Editor\6000.3.27f2\Editor\Unity.exe`) и 6000.6.7f1, Ollama 0.40.10 (не запущен), .NET 7/8, WinRAR 7.13.
 - **Отсутствует (подтверждено поиском на PREP-00, актуально с оговорками):** Blender и ComfyUI **установлены 2026-11-13** (см. ниже); по-прежнему отсутствуют Cascadeur, n8n, системный Node.js/npm/pnpm, ffmpeg в PATH, CUDA Toolkit (`nvcc`), 7-Zip (запись в реестре устарела — используется отдельный `7zr.exe`).
 - **ComfyUI (актуально 2026-11-13):** старый экземпляр был удалён владельцем; выполнена новая установка с нуля — официальный portable 0.45.0 NVIDIA в `D:\programs\ComfyUI\`, SHA-256 сверен, runtime/API проверены (PREP-03 `PARTIAL`).
@@ -123,6 +126,7 @@
 | **PREP-05** | Новые анимации: реальный bone clip из Blender/Cascadeur; локальные AI motion кандидаты | `PLANNED` | — |
 | **PREP-06** | Оркестрация и контракты без кастомизации: manifest/schema, команды-образцы, решение Python vs n8n | `PLANNED` | — |
 | **PREP-07** | Интеграционная демонстрация: модель → rig → skinning → клип → воспроизводимость | `PLANNED` | — |
+| **ORC-01** | Технический прототип модульной voxel-модели: генерация → Blender 5.2.4 → `.blend` → GLB round-trip → 3 вида | **READY_FOR_REVIEW** (технический PASS; визуально не утверждено) | `docs/prototypes/ORC01_LOCAL_VALIDATION.md`, `outputs/prototypes/orc_01/`, `logs/ORC-01_*`, `scripts/voxel/*`, `scripts/blender/orc01_*` |
 
 Разрыв между «инструмент есть» и «конвейер работает» фиксируется в `docs/PIPELINE_GAPS.md`.
 
@@ -176,9 +180,10 @@
 **Решения ожидают подтверждения:** выбор конкретной AI-модели/кандидатов (источник, размер, лицензия, VRAM), установка Cascadeur (после лицензии), нужен ли n8n, какие части Python automation понадобятся позже.
 
 **Открытые вопросы к пользователю (минимально необходимое):**
-1. Согласование AI-модели для ComfyUI (источник, размер, лицензия, требуемая VRAM, качество) — только после этого тест генерации/переработки геометрии.
-2. Cascadeur: лицензия/тариф и ограничения экспорта FBX (перед установкой).
-3. Приёмка (ACCEPTED) по PREP-00/PREP-01 — сейчас оба `READY_FOR_REVIEW`.
+1. **ORC-02:** визуальная оценка прототипа (`MODEL_APPROVED`/`MODEL_REWORK`) и решение — предоставить легальную рабочую копию существующего Orc или доводить новую процедурную модель.
+2. Согласование AI-модели для ComfyUI (источник, размер, лицензия, требуемая VRAM, качество) — только после этого тест генерации/переработки геометрии.
+3. Cascadeur: лицензия/тариф и ограничения экспорта FBX (перед установкой).
+4. Приёмка (ACCEPTED) по PREP-00/PREP-01/ORC-01 — сейчас все `READY_FOR_REVIEW`.
 
 ## 8. Хронология работ (append-only, кратко)
 
@@ -199,6 +204,11 @@
 | 2026-11-13 | PREP-03 (установка) | Скачан и проверен официальный ComfyUI 0.45.0 portable NVIDIA (1.93 ГБ, SHA-256 совпал), распакован `7zr.exe` в `D:\programs\ComfyUI\` (4.25 ГБ); embedded python 3.13.14 + torch 2.14.1+cu130; PATH и системный Python не менялись | `logs\PREP-03_cuda_sanity_2026-11-13.txt`; `docs\INSTALLATION_LOG.md` | Запуск и API smoke |
 | 2026-11-13 | PREP-03 (испытание) | GPU (`--reserve-vram 5`) и CPU (`--cpu`) прогоны PASS: сервер 10.7–11.8 с (холодный ~146 с), UI 200, `POST /prompt` → `/history` → `/view`, PNG 96×96; пик RAM процесса 972/859 МБ, прирост VRAM ≈86 МБ; CUDA matmul 0.12 с, allocated 56.1 МБ | `logs\PREP-03_run_gpu/cpu_2026-11-13.txt`; `outputs\reports\prep03_comfyui_smoke_*.json`; `outputs\comfyui\prep03_smoke_from_api.png` | Документация + commit/push |
 | 2026-11-13 | PREP-03 (документация) | Обновлены `TEST_RESULTS` (PREP-03 yaml + карточка RAM/VRAM), `TOOL_INVENTORY`, `INSTALLATION_LOG`, `LICENSE_MATRIX` (ComfyUI GPL-3.0, torch/CUDA, 7zr), `PIPELINE_GAPS` (G2 закрыт, F11–F13), `MIGRATION_STATUS` (ComfyUI-раздел), `README`, память v1.5 | `docs\*`, `README.md`, `03_FACTORY_PROJECT_MEMORY.md` | Коммит в `factory/work` |
+| 2026-11-13 | ORC-01 (перенос) | `git merge --ff-only` до remote `909bc94` (документы FACT-D17 и ORC-пилот). Найден и распакован архив `FACTORIA_ORC_01_package.zip` (78 966 Б); генератор и превью-скрипт перенесены в `scripts/voxel/`, handoff-артефакты — в `outputs/prototypes/orc_01/handoff/` | `outputs\prototypes\orc_01\handoff\*`, `logs\ORC-01_generator_2026-11-13.txt` | Локальная генерация |
+| 2026-11-13 | ORC-01 (генерация) | Локальный прогон: 0.18 с, 12.9 МБ RAM, 211 боксов/20 модулей/2532 треугольника; два прогона идентичны; исходный генератор воспроизвёл handoff-GLB байт-в-байт; seed 23 отличается | `outputs\prototypes\orc_01\generated\*`, `logs\ORC-01_glb_inspect_2026-11-13.txt` | Проверка GLB инспектором |
+| 2026-11-13 | ORC-01 (дефекты) | Найдены 2 дефекта: пересечение 4 стыков конечностей; `COLOR_0` без `normalized` (Blender показывал белый). Исправлены минимальной правкой генератора; после правок 0 issues, зазоры 0.020–0.045 м | `scripts\voxel\orc_prototype.py`; `outputs\prototypes\orc_01\reports\glb_inspect_*.json` | Blender-проверка |
+| 2026-11-13 | ORC-01 (Blender) | Импорт 20 модулей, целостность, материалы/цвета, оси/масштаб, независимое редактирование, зазоры, `.blend` сохранён и переоткрыт, GLB round-trip без потерь, 3 вида (Cycles CPU). Пик RAM 281–315 МБ, VRAM не использовалась | `logs\ORC-01_blender_2026-11-13.txt`, `logs\ORC-01_blend_reopen_2026-11-13.txt`, `outputs\prototypes\orc_01\blender\*`, `outputs\prototypes\orc_01\reports\blender_roundtrip.json` | Документация + commit/push |
+| 2026-11-13 | ORC-01 (документация) | Создан `docs\prototypes\ORC01_LOCAL_VALIDATION.md`; обновлён статус пилота; добавлено исключение в `.gitignore` для `outputs/prototypes/**/*.glb`; память v1.6 | `docs\prototypes\*`, `.gitignore`, `03_FACTORY_PROJECT_MEMORY.md` | Commit/push |
 
 ## 9. Что делать DeepSeek прямо в следующем чате
 
@@ -208,14 +218,14 @@
 
 **Выполнено в PREP-03 (2026-11-13, частично):** ComfyUI 0.45.0 portable установлен и проверен как runtime: сервер, UI, API-workflow без моделей, CUDA-вычисления встроенного torch, замеры RAM/VRAM. Статус `PARTIAL` — AI-модели и генерация 3D не проверялись.
 
-**Следующая сессия — PREP-02 (обмен форматами):**
+**Выполнено в ORC-01 (2026-11-13):** перенесённый генератор отработал локально; GLB проверен независимым stdlib-инспектором; найдены и минимально исправлены 2 дефекта (пересечение 4 стыков конечностей, `COLOR_0` без `normalized`); модель импортирована в Blender 5.2.4 (20 независимых модулей), `.blend` сохранён и переоткрыт, GLB round-trip без потерь, отрендерены 3 вида. Статус `READY_FOR_REVIEW`; **визуальной приёмки нет** (`MODEL_PENDING_REVIEW` по FACT-D17).
 
-1. Перечитать `AGENTS.md`, `01`, `02`, `03`, `CHAT_ROUTING.md`; сверить состояние: `Test-Path D:\programs\Blender\5.2\blender.exe`, `Test-Path D:\programs\ComfyUI\run_nvidia_gpu.bat`, наличие `outputs\blender\prep01_rigify_skinned.blend`.
-2. На **собственной** тестовой модели проверить обмен: `.blend` → `.fbx` → импорт, `.blend` → `.glb` → импорт; зафиксировать масштаб, оси (Y-up vs Z-up), материалы, дерево костей, веса, наличие action.
-3. Составить таблицу `INPUT→OUTPUT` с потерями по каждому формату; отдельно зафиксировать, что теряется при FBX-экспорте control rig (706 костей) и как получить deform-only скелет.
-4. Проверить простой анимационный клип (idle/swing) и его выживание после экспорта/импорта — это мост к PREP-05.
-5. Обновить `docs/TEST_RESULTS.md` (PREP-02 yaml), `docs/PIPELINE_GAPS.md`, эту память; commit/push в `factory/work`.
-6. **Не начинать** AI-эксперименты в ComfyUI без согласования модели; Unity не запускать; CubeGame не открывать.
+**Следующая сессия — выбор владельца:**
+
+1. **ORC-02 — художественная детализация:** нужна либо легальная редактируемая рабочая копия существующего Orc (её нет — есть только PNG-референсы), либо явное решение доводить новую процедурную модель. После этого — визуальная приёмка `MODEL_APPROVED`/`MODEL_REWORK` (FACT-D17).
+2. **PREP-02 (форматы/экспорт)** — плановый этап PREP, не отменён: `.blend`/`.fbx`/`.glb` round-trip с осями, материалами и action; deform-only скелет вместо 706-костного Rigify control rig.
+3. Проверить перед работой: `git -C "D:\Projects\CubeGame Factory" pull --ff-only`, `Test-Path D:\programs\Blender\5.2\blender.exe`, `Test-Path outputs\prototypes\orc_01\blender\orc01_modular.blend`, `Test-Path D:\programs\ComfyUI\run_nvidia_gpu.bat`.
+4. **Не делать** без отдельного разрешения: риг/анимации/эмоции на прототипе, установка AI-весов, массовая генерация, любые действия в CubeGame/Unity.
 
 ## 10. Протокол обновления межчатовой памяти
 
