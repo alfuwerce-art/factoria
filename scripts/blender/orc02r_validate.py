@@ -31,9 +31,10 @@ CHAINS = {
     "leg_R": ["thigh_R", "shin_R", "foot_R"],
     "spine": ["pelvis", "torso", "head"],
 }
-EXPECTED = ["head", "eyes", "brows", "mouth", "hair", "beard", "torso", "pelvis",
+EXPECTED = ["head", "eyes", "brows", "mouth", "hair", "torso", "pelvis",
             "upper_arm_L", "forearm_L", "hand_L", "upper_arm_R", "forearm_R", "hand_R",
-            "thigh_L", "shin_L", "foot_L", "thigh_R", "shin_R", "foot_R"]
+            "thigh_L", "shin_L", "foot_L", "thigh_R", "shin_R", "foot_R",
+            "pouch", "weapon_club"]
 
 report = {"stage": "ORC-02R/blender_validation", "blender": bpy.app.version_string,
           "source_glb": SRC_GLB, "stages": {}, "numbers": {}, "issues": [], "artifacts": {}}

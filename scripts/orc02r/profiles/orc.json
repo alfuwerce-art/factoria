@@ -1,83 +1,104 @@
 {
-  "schema": "factoria.humanoid.profile.v1",
-  "name": "orc_heavy",
+  "schema": "factoria.humanoid.profile.v2",
+  "name": "orc_heavy_compact",
   "kind": "ORC",
-  "note": "Все числа в вокселях генератора. landmark-разметка задаёт анатомические плоскости, widths — силуэт, face/hair/beard/armor — орк-специфику. Ни одно значение не является копией воксельной сетки CubeGame.",
+  "note": "Числа в вокселях генератора. Анатомические плоскости — от измеренного роста референсного Orc (1.848 м), силуэтные пропорции — от УТВЕРЖДЁННОГО визуального эталона (компактный коренастый орк). Ни одно значение не является копией воксельной сетки CubeGame.",
   "seed": 20261113,
   "voxel_size_m": 0.03,
   "landmarks": {
     "ground": 0,
     "ankle": 4,
-    "knee": 18,
-    "crotch": 31,
-    "waist": 39,
-    "shoulder": 49,
-    "neck_top": 52,
-    "chin": 53,
-    "skull_top": 63,
-    "elbow": 37,
-    "wrist": 28,
-    "hand_tip": 22,
-    "eye": 58,
-    "brow": 60
+    "knee": 13,
+    "crotch": 21,
+    "waist": 28,
+    "shoulder": 40,
+    "neck_top": 42,
+    "chin": 43,
+    "skull_top": 59,
+    "elbow": 33,
+    "wrist": 27,
+    "hand_tip": 21,
+    "eye": 50,
+    "brow": 52
   },
   "surfaces": {
-    "head": -8,
-    "torso": -6,
-    "pelvis": -5,
-    "leg": -5,
-    "shin": -4,
-    "foot": -9
+    "head": -10,
+    "torso": -7,
+    "pelvis": -6,
+    "leg": -7,
+    "shin": -6,
+    "foot": -10,
+    "arm": -5
   },
   "widths": {
-    "head_width": 12,
-    "head_depth": 13,
-    "neck_width": 6,
-    "neck_depth": 7,
-    "chest_width": 15,
-    "chest_depth": 11,
-    "waist_width": 12,
-    "waist_depth": 9,
-    "pelvis_width": 14,
-    "pelvis_depth": 9.5,
-    "arm_center_x": 9.5,
-    "hand_width": 7,
-    "hand_depth": 5,
-    "leg_center_x": 5.5,
-    "thigh_width": 10,
-    "thigh_depth": 10,
-    "shin_width": 8,
-    "shin_depth": 9,
-    "foot_width": 8,
-    "foot_length": 11
+    "head_width": 18,
+    "head_depth": 17,
+    "head_center_y": -1.5,
+    "jaw_width": 14,
+    "neck_width": 8,
+    "neck_depth": 9,
+    "chest_width": 18,
+    "chest_depth": 13,
+    "waist_width": 16,
+    "waist_depth": 11,
+    "pelvis_width": 19,
+    "pelvis_depth": 12,
+    "arm_center_x": 12,
+    "upper_arm_width": 8,
+    "upper_arm_depth": 9,
+    "forearm_width": 8,
+    "forearm_depth": 8,
+    "hand_width": 9,
+    "hand_depth": 6,
+    "leg_center_x": 7,
+    "thigh_width": 13,
+    "thigh_depth": 13,
+    "shin_width": 11,
+    "shin_depth": 12,
+    "foot_width": 11,
+    "foot_length": 15
   },
   "face": {
-    "jaw_width": 10,
-    "brow_depth": 2,
+    "jaw_width": 14,
+    "brow_depth": 1,
     "brow_height": 2,
     "nose_width": 4,
     "mouth_width": 6,
-    "tusk_length": 2,
-    "ear_length": 2,
+    "tusk_length": 3,
+    "ear_length": 3,
     "scars": true
   },
   "hair": {
     "enabled": true,
-    "style": "TOPKNOT",
-    "mass": 1.0
+    "style": "CREST",
+    "mass": 1.0,
+    "headband": true
   },
   "beard": {
+    "enabled": false,
+    "style": "NONE",
+    "density": 0.0
+  },
+  "outfit": {
+    "tunic": true,
+    "pants": true,
+    "boots": true,
+    "sash": true,
+    "loincloth": true,
+    "diagonal_strap": true,
+    "pauldron_side": "RIGHT",
+    "bracers": 2,
+    "pouch": true
+  },
+  "weapon": {
     "enabled": true,
-    "style": "TWO_BRAIDS",
-    "density": 1.0
+    "type": "CLUB_STONE",
+    "hand": "RIGHT"
   },
   "armor": {
-    "set": "ORC_HEAVY_ASYMMETRIC",
+    "set": "ORC_COMPACT_REFERENCE",
     "pauldron_side": "LEFT",
-    "armor_mass": 1.0,
-    "bracers": 2,
-    "greaves": 2,
-    "belt": "WIDE_BRONZE"
+    "armor_mass": 1.0
   },
   "detail": {
     "max_box_voxels": 6,
@@ -86,104 +107,134 @@
   },
   "palette": {
     "skin": [
-      88,
-      116,
-      56
+      106,
+      168,
+      52
     ],
     "skin_light": [
-      108,
-      138,
-      70
+      128,
+      192,
+      72
     ],
     "skin_shadow": [
-      66,
-      90,
-      44
+      84,
+      138,
+      40
     ],
     "skin_dark": [
-      46,
-      64,
-      30
+      60,
+      102,
+      28
     ],
     "scar": [
-      146,
-      138,
+      150,
+      168,
       104
     ],
     "eye_sclera": [
+      24,
       22,
-      20,
-      16
+      18
     ],
     "eye_iris": [
-      212,
-      132,
-      36
+      232,
+      176,
+      72
     ],
     "eye_pupil": [
+      12,
       10,
-      8,
-      6
+      8
     ],
     "mouth": [
-      56,
-      32,
-      28
+      44,
+      24,
+      18
     ],
     "ivory": [
-      226,
-      214,
-      184
+      242,
+      232,
+      206
     ],
     "hair": [
       48,
-      38,
-      54
-    ],
-    "beard": [
-      42,
       34,
-      50
+      24
+    ],
+    "tunic": [
+      58,
+      40,
+      30
+    ],
+    "tunic_dark": [
+      38,
+      26,
+      19
+    ],
+    "pants": [
+      52,
+      36,
+      26
+    ],
+    "boot": [
+      44,
+      30,
+      22
+    ],
+    "boot_sole": [
+      74,
+      64,
+      52
     ],
     "leather": [
-      70,
-      50,
-      34
+      92,
+      64,
+      40
     ],
     "leather_dark": [
-      42,
-      30,
-      20
+      58,
+      40,
+      26
     ],
-    "cloth": [
-      46,
-      70,
-      64
+    "red": [
+      178,
+      36,
+      30
     ],
-    "cloth_dark": [
-      32,
-      50,
-      46
+    "red_dark": [
+      128,
+      24,
+      22
     ],
     "metal": [
-      86,
-      92,
-      98
+      96,
+      98,
+      100
     ],
     "metal_dark": [
-      52,
-      57,
-      61
+      58,
+      60,
+      62
     ],
     "metal_light": [
-      128,
-      135,
-      140
+      140,
+      142,
+      145
     ],
     "bronze": [
-      130,
-      100,
+      168,
+      128,
+      62
+    ],
+    "wood": [
+      122,
+      88,
       48
+    ],
+    "stone": [
+      78,
+      96,
+      82
     ]
   }
 }

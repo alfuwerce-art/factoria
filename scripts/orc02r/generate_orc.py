@@ -31,10 +31,10 @@ GENERATOR = "Factoria HumanoidBase v1 + orc profile (ORC-02R new geometry)"
 
 # Кто «владеет» вокселем при пересечении модулей (первый в списке сохраняет его).
 PRIORITY = [
-    "head", "eyes", "brows", "mouth", "torso", "pelvis",
+    "head", "eyes", "brows", "mouth", "hair", "torso", "pelvis",
+    "pouch", "weapon_club",
     "thigh_L", "thigh_R", "shin_L", "shin_R", "foot_L", "foot_R",
     "upper_arm_L", "upper_arm_R", "forearm_L", "forearm_R", "hand_L", "hand_R",
-    "hair", "beard",
 ]
 CHAINS = {
     "leg_L": ["thigh_L", "shin_L", "foot_L"],
@@ -238,8 +238,9 @@ def main(argv=None) -> int:
             "deviation_percent": ref_deviation,
             "reference_torso_m": ref.get("torso"),
             "reference_head_m": ref.get("head"),
-            "note": "рост (по макушке черепа) сверяется с референсом; силуэтные ширины профиля "
-                    "подобраны так, чтобы орк читался без 'блоб-головы' источника",
+            "note": "рост (по макушке черепа) сверяется с измерениями старого Orc; силуэтные "
+                    "пропорции (крупная голова, короткие конечности, широкие плечи) взяты с "
+                    "УТВЕРЖДЁННОГО визуального эталона ORC-02R, а не из старой модели",
         },
         "levels": {lv: level_stats[lv] for lv in LEVELS},
         "modules": module_stats,

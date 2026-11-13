@@ -121,19 +121,35 @@ class Sculpt:
     def merge(self, other: "Sculpt"):
         self.cells.update(other.cells)
 
-    def cut(self, part: str, z: int, mats=None):
-        """Убирает слой вокселей части на стыке — зазор между сегментами.
-
-        mats — какие материалы резать (обычно только кожу): одежда/броня,
-        перекрывающая стык, остаётся на своей части и скрывает шов.
-        """
+    def cut(self, part: str, z: int, mats=None, keep_mats=()):
+        """Убирает весь слой вокселей части на стыке (полный зазор)."""
         dropped = 0
         for pos, val in [it for it in self.cells.items()
                          if it[1][2] == part and it[0][2] == z
-                         and (mats is None or it[1][0] in mats)]:
+                         and (mats is None or it[1][0] in mats)
+                         and it[1][0] not in keep_mats]:
             del self.cells[pos]
             dropped += 1
         return dropped
+
+    def cut_shell(self, part: str, z: int, keep_mats=(), depth: int = 1):
+        """Срезает только НАРУЖНУЮ оболочку части на стыке, оставляя внутренний сердечник.
+
+        Такой шов читается как канавка (как у модульных фигурок), а не как чёрная
+        дыра на всю толщину конечности; части при этом остаются раздельными.
+        """
+        cells_at_z = {pos: val for pos, val in self.cells.items()
+                      if val[2] == part and pos[2] == z and val[0] not in keep_mats}
+        if not cells_at_z:
+            return 0
+        removed = 0
+        for (x, y, _), _val in list(cells_at_z.items()):
+            neighbours = sum(1 for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1))
+                             if (x + dx, y + dy, z) in cells_at_z)
+            if neighbours < 4:
+                del self.cells[(x, y, z)]
+                removed += 1
+        return removed
 
     def to_grids(self, order) -> dict[str, "Grid"]:
         grids = {}
