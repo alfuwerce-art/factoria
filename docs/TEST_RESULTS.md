@@ -90,42 +90,97 @@ Blender · Rigify (зависит от Blender) · ComfyUI · Cascadeur · n8n �
 
 ---
 
-## PREP-01 — Blender / Rigify
+## PREP-01 — Blender / Rigify / skinning / экспорт
 
 ```yaml
 id: PREP-01
-status: PLANNED
+status: READY_FOR_REVIEW          # каждая проверенная операция = SMOKE_PASS; приёмка за пользователем
 machine: WINDOWS_11
-software: Blender
-version: 5.2.4 LTS (цель; официальный индекс подтверждает сборку)
-source_url: https://download.blender.org/release/Blender5.2/
-license: GPL-2.0-or-later
-install_location: TO_DISCOVER (план: D:\programs\Blender\5.2\)
-sample_asset: собственный тестовый меш (будет создан в samples/original_test_assets)
-command: NOT_RUN
-input: n/a
-output: n/a
+software: Blender 5.2.4 LTS + штатный Rigify 0.6.10 + io_scene_fbx 5.15.0
+version: 5.2.4 LTS (build hash cd5dc428cce1, build date 2026-11-10), Python внутри 3.13.13
+source_url: https://download.blender.org/release/Blender5.2/blender-5.2.4-windows-x64.zip
+license: GPL-2.0-or-later (файлы license\ в поставке; SHA-файл сборки опубликован)
+install_location: D:\programs\Blender\5.2\blender.exe
+download_sha256: bbd78f8931dc940444da4ff2983374930f9f5c092ae0e330588e9760bb9d967c
+sha256_verified: YES (совпало с blender-5.2.4.sha256, строка windows-x64.zip)
+install_size: 901.3 MB, 6530 файлов; PATH не изменялся
+sample_asset: собственный процедурный манекен CG_PREP01_Mannequin (160 боксов по deform-костям + voxel remesh)
+command: |
+  $env:BLENDER_USER_CONFIG="D:\Projects\CubeGame Factory\environments\blender\config"
+  & 'D:\programs\Blender\5.2\blender.exe' --background --factory-startup --python-exit-code 1 `
+      --python "D:\Projects\CubeGame Factory\scripts\blender\prep01_rigify_skinning.py"
+input: scripts\blender\prep01_rigify_skinning.py (создаёт геометрию сам, внешних ассетов нет)
+output: |
+  outputs\blender\prep01_rigify_skinned.blend      (574 КБ, риг+меш+позы)
+  outputs\blender\prep01_rigify_skinned.fbx        (1.54 МБ, экспорт)
+  outputs\blender\prep01_rest_pose.png             (evidence, rest)
+  outputs\blender\prep01_control_pose.png          (evidence, control-поза)
+  outputs\blender\prep01_gui_open.png              (скриншот GUI с открытым .blend)
+  outputs\reports\prep01_rigify_skinning.json      (машиночитаемый отчёт)
 checks:
-  - name: GUI открывается
-    result: NOT_TESTED
-  - name: Headless (--background) запускается
-    result: NOT_TESTED
-  - name: Rigify add-on доступен
-    result: NOT_TESTED
+  - name: GUI открывается и открывает лабораторный .blend
+    result: PASS  (заголовок окна "prep01_rigify_skinned [D:\...\prep01_rigify_skinned.blend] - Blender 5.2.4 LTS", скриншот)
+  - name: Headless (--background) запускается и сохраняет .blend
+    result: PASS  (exit 0, prep01_bg_smoke.blend 86 КБ)
+  - name: Rigify add-on доступен через API
+    result: PASS  (bpy.ops.preferences.addon_enable(module='rigify') → enabled)
   - name: Metarig → generate rig на собственной фигуре
-    result: NOT_TESTED
-  - name: Automatic Weights (встроенный skinning)
-    result: NOT_TESTED
-issues: []
-next_action: скачать blender-5.2.4-windows-x64.zip (405 779 142 байт) + .sha256, распаковать на D:, зафиксировать SHA-256
+    result: PASS  (metarig 159 костей → rig 706 костей: 160 DEF + 546 control)
+  - name: Parent with Automatic Weights (встроенный skinning)
+    result: PASS  (160 vertex groups, 0 вершин без весов, Armature Modifier → rig)
+  - name: Контрольные позы деформируют меш
+    result: PASS  (IK-таргеты: 0.562 м, FK-режим: 0.332 м смещения вершин из depsgraph)
+  - name: Экспорт FBX и обратный импорт
+    result: PASS  (FBX 1.54 МБ → импорт: 1 armature, 1 mesh, 145 vgroups, поворот кости даёт 0.566 м)
+issues:
+  - addon_utils.enable('rigify') оставляет аддон полу-зарегистрированным: generate падает "'RigifyParameters' object has no attribute 'make_custom_pivot'"
+  - 160 отдельных закрытых боксов ломают Bone Heat Weighting полностью (0 весов из 1280 вершин)
+  - авто-веса не нормированы: сумма весов на вершину min 0.732 / p50 0.971 / max 0.9999
+  - DEF-кости Rigify управляются constraints: прямой поворот DEF-кости не деформирует меш (0.0 м)
+  - FBX экспортирует весь control rig (706 костей), а не чистый game-skeleton
+next_action: PREP-02 — round-trip .blend/.fbx/.glb с контролем осей, масштаба, материалов и анимационного action
 ```
 
-**Официальные данные загрузки (проверено 2026-11-13):**
+**Воспроизводимость:** полный прогон — 11.8–12.0 с (два прогона), пиковый рабочий набор процесса Blender 394–402 МБ,
+свободная RAM до/после 20.43 → 20.45 ГБ, рендер Cycles на CPU (VRAM не занималась).
+Лог: `logs\PREP-01_rigify_skinning_2026-11-13.txt`, диагностика: `logs\PREP-01_diagnostics_2026-11-13.txt`.
 
-| Файл | Размер (байт) | Источник |
-|---|---|---|
-| `blender-5.2.4-windows-x64.zip` | 405 779 142 | `https://ftp.blender.org/release/Blender5.2/` |
-| `blender-5.2.4.sha256` | 777 | там же |
+**Измеренные величины**
+
+| Метрика | Значение |
+|---|---|
+| Костей в metarig / в сгенерированном rig | 159 / 706 |
+| Deform-костей / control-костей | 160 / 546 |
+| Вершин манекена: до / после voxel remesh | 1280 (160 оболочек) / 3926 (1 оболочка) |
+| Vertex groups / вершин без весов | 160 / 0 |
+| Сумма весов на вершину (min / p50 / max) | 0.7323 / 0.9711 / 0.9999 |
+| Смещение меша: IK-контролы / FK-контролы / прямой DEF | 0.562 м / 0.332 м / 0.0 м |
+| Рендер 640×800, Cycles CPU, 24 сэмпла | rest 1.0–1.3 с, posed 0.7 с |
+| .blend / .fbx / отчёт | 587 722 Б / 1 577 084 Б / 5.9 КБ |
+| FBX обратный импорт | 1 armature (706 костей), 1 mesh, 145 vgroups, 0.566 м |
+
+**Найденные ловушки (проверено на практике, не теория)**
+
+1. **`addon_utils.enable("rigify")` непригоден в 5.2.4.** Операторы регистрируются, но
+   генерация падает: `Generation has thrown an exception: 'RigifyParameters' object has no
+   attribute 'make_custom_pivot'`. Рабочий путь — `bpy.ops.preferences.addon_enable(module='rigify')`.
+2. **Bone Heat Weighting не работает на несвязной геометрии.** 160 отдельных боксов
+   (по одному на кость) → предупреждение `Bone Heat Weighting: failed to find solution for one
+   or more bones` и **0 весов на всех 1280 вершинах**. После склейки боксов штатным
+   Voxel Remesh в одну оболочку веса назначаются всем вершинам.
+3. **Rigify управляет деформацией через control-кости.** Прямой поворот `DEF-upper_arm.L`
+   не даёт смещения (0.0 м); работают `hand_ik.*` / `foot_ik.*` (IK) либо `*_fk.*` при
+   `IK_FK = 1.0` на `upper_arm_parent.*` / `thigh_parent.*`.
+4. **Авто-веса не нормированы:** 2426 из 3926 вершин имеют сумму весов ниже 1.0 на 2 %+.
+   Для продакшена потребуется шаг нормализации (зафиксировано в `PIPELINE_GAPS.md`, F8).
+5. **FBX несёт весь control rig (706 костей).** Для Unity нужен отдельный deform-only
+   экспорт — это задача PREP-02/PREP-04, а не «уже готовый game skeleton».
+6. **`rig_ui.py` и автозапуск скриптов:** при открытии .blend в GUI Blender показывает
+   диалог «automatic execution ... was disabled» — штатное поведение Rigify, не ошибка.
+
+**Что этим НЕ доказано:** пригодность auto-weights для реальных плеч/таза/доспехов;
+fitted skeleton под пропорции произвольной модели (Rigify не Rig Fitter); корректность
+осей/единиц/bind pose в Unity; воспроизводимость на моделях CubeGame (не запускались).
 
 ---
 
@@ -135,4 +190,8 @@ next_action: скачать blender-5.2.4-windows-x64.zip (405 779 142 байт)
 id: PREP-02
 status: PLANNED
 checks: []   # выполняется после PREP-01
+note: |
+  В PREP-01 уже проверен минимальный экспорт: FBX тестового ригнутого меша и обратный
+  импорт в пустую сцену (см. выше). PREP-02 должен закрыть полный round-trip
+  .blend/.fbx/.glb с масштабом, осями, материалами и анимационным action.
 ```

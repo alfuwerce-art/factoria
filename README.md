@@ -11,9 +11,10 @@
 | Пункт | Значение |
 |---|---|
 | PREP-00 (аудит ПК и ПО) | **READY_FOR_REVIEW** — выполнен, доказательства в `logs/PREP-00_detection_2026-11-13.txt` |
-| Blender | **НЕ УСТАНОВЛЕН** → блокер PREP-01 |
+| PREP-01 (Blender / Rigify / skinning / экспорт) | **READY_FOR_REVIEW** — Blender 5.2.4 LTS установлен и проверен, Rigify + auto weights + позы + FBX доказаны на собственной фигуре |
+| Blender | **5.2.4 LTS** → `D:\programs\Blender\5.2\blender.exe` (SHA-256 сверен, PATH не менялся) |
+| Rigify | **0.6.10**, встроенный; генерирует rig (160 deform + 546 control), skinning работает |
 | ComfyUI | **НЕ НАЙДЕН** (расхождение с ТЗ) → нужен путь от пользователя |
-| Rigify | проверить после установки Blender |
 | Git / remote | локальный репозиторий; remote **не настроен** (`PUSH=NOT_CONFIGURED`) |
 | Режим DSH | **CubeGame Factory** (`cubegame-factory`) — выбирается при создании нового чата |
 
@@ -56,7 +57,42 @@ Get-Command python,git,blender,ollama,node -ErrorAction SilentlyContinue
 py -0p
 ```
 
-Ожидаемый результат на этой машине: Python 3.13.14, Git 2.55.0, VS Code 1.145.2, Unity 6000.3.27f2/6000.6.7f1, Ollama 0.40.10, RTX 4060 Laptop 8188 MiB; **Blender отсутствует**.
+Ожидаемый результат на этой машине: Python 3.13.14, Git 2.55.0, VS Code 1.145.2, Unity 6000.3.27f2/6000.6.7f1, Ollama 0.40.10, RTX 4060 Laptop 8188 MiB; Blender появился после PREP-01 в `D:\programs\Blender\5.2\`.
+
+---
+
+## Как воспроизвести PREP-01 (Blender / Rigify / skinning / FBX)
+
+```powershell
+# 1. Проверка установки и версии (PATH не используется)
+& 'D:\programs\Blender\5.2\blender.exe' --version
+
+# 2. Изоляция пользовательского конфига Blender в лаборатории
+$env:BLENDER_USER_CONFIG = 'D:\Projects\CubeGame Factory\environments\blender\config'
+
+# 3. Headless smoke test: background + сохранение .blend
+& 'D:\programs\Blender\5.2\blender.exe' --background --factory-startup --python-exit-code 1 `
+    --python "D:\Projects\CubeGame Factory\scripts\blender\prep01_bg_smoke.py"
+
+# 4. Полный тест: Rigify → generate rig → манекен → auto weights → позы → рендер → FBX → импорт
+& 'D:\programs\Blender\5.2\blender.exe' --background --factory-startup --python-exit-code 1 `
+    --python "D:\Projects\CubeGame Factory\scripts\blender\prep01_rigify_skinning.py"
+
+# 5. GUI: открыть результат глазами
+& 'D:\programs\Blender\5.2\blender.exe' "D:\Projects\CubeGame Factory\outputs\blender\prep01_rigify_skinned.blend"
+```
+
+Ожидаемый итог: `PREP01_RESULT=PASS`, отчёт `outputs\reports\prep01_rigify_skinning.json`,
+файлы `outputs\blender\prep01_rigify_skinned.blend` / `.fbx` и два PNG-доказательства
+(rest и control-поза). Полный прогон ≈ 12 с (11.8–12.0 с), пиковый рабочий набор 394–402 МБ, VRAM не используется
+(рендер Cycles на CPU).
+
+Официальные данные загрузки (проверено 2026-11-13):
+
+| Файл | Размер (байт) | SHA-256 | Источник |
+|---|---|---|---|
+| `blender-5.2.4-windows-x64.zip` | 405 779 142 | `bbd78f8931dc940444da4ff2983374930f9f5c092ae0e330588e9760bb9d967c` | `https://download.blender.org/release/Blender5.2/` |
+| `blender-5.2.4.sha256` | 777 | — | там же |
 
 ---
 
@@ -74,4 +110,6 @@ py -0p
 
 ## Следующий шаг
 
-**PREP-01:** скачать `blender-5.2.4-windows-x64.zip` (405 779 142 байта) и `.sha256` с `https://ftp.blender.org/release/Blender5.2/`, распаковать в `D:\programs\Blender\5.2\`, проверить SHA-256, GUI и `blender --background`, затем включить и проверить Rigify.
+**PREP-02:** round-trip форматов на собственной модели — `.blend` / `.fbx` / `.glb`: импорт и экспорт,
+масштаб и оси, материалы, дерево костей, веса, анимационный action; таблица `INPUT→OUTPUT` с потерями.
+Минимальный FBX-экспорт уже проверен в PREP-01, но полный обмен форматами — ещё нет.

@@ -44,3 +44,7 @@ desktop.ini
 .vs/
 .vscode/
 *.swp
+
+# Blender user-config лаборатории (машинно-специфично, не публикуется)
+environments/blender/
+

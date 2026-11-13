@@ -1,9 +1,9 @@
 # CubeGame Asset & Animation Factory Lab — межчатовая память
 
 **Документ:** `03_FACTORY_PROJECT_MEMORY.md`  
-**Версия:** 1.3 · 13.11.2026  
-**Статус:** `PREP-00 = READY_FOR_REVIEW` — аудит машины выполнен с доказательствами; установок ПО пока нет; PREP-01 не начат.  
-**Рабочая папка (действующая):** `D:\Projects\CubeGame Factory\` — единый канонический каталог проекта с 2026-11-13 12:05 MSK. Содержит четыре документа, журналы `docs/`, доказательства `logs/`, исходники пресета `plugins/` и локальный git-репозиторий (ветки `main` / `factory/work`). Ранее созданный `D:\Projects\CubeGameFactoryLab` **SUPERSEDED**: оставлен как архив предыдущей сессии, не использовать для новой работы.  
+**Версия:** 1.4 · 13.11.2026  
+**Статус:** `PREP-00 = READY_FOR_REVIEW`, **`PREP-01 = READY_FOR_REVIEW`** — Blender 5.2.4 LTS установлен и проверен реальным запуском (Rigify, skinning, контрольные позы, FBX-экспорт и обратный импорт). PREP-02 не начат.  
+**Рабочая папка (действующая):** `D:\Projects\CubeGame Factory\` — единый канонический каталог проекта с 2026-11-13 12:05 MSK. Содержит четыре документа, журналы `docs/`, доказательства `logs/`, скрипты `scripts/blender/`, выходы `outputs/`, исходники пресета `plugins/` и локальный git-репозиторий (ветки `main` / `factory/work`). Ранее созданный `D:\Projects\CubeGameFactoryLab` **SUPERSEDED**: оставлен как архив предыдущей сессии, не использовать для новой работы.  
 **Исполнитель:** DeepSeek Harness.  
 **Назначение:** сохранять между чатами фактическое состояние независимой Factory Lab, утверждённые решения, установки, результаты тестов, проблемы и точку продолжения. **Этот файл обновляется исполнителем после каждого завершённого пакета работы и перед передачей в другой чат.** Обязательные правила исполнителя находятся в `AGENTS.md` (четвёртый служебный файл, а не замена одного из трёх основных документов).
 
@@ -90,6 +90,9 @@
 - Реестр доступен как текстовая справка: `https://github.com/alfuwerce-art/CubeGame/blob/review/m1-creature-family-research/docs/research/M1_ALPHA_CREATURE_IDENTITY_REGISTRY.csv`. Не копировать закрытый исходный контент Alpha в Lab.
 - Соответствие `Alpha kind → подготовленный Unity visual` по данным M1-R0 установлено в реестре; геометрия/клипы находятся локально (`LOCAL_ONLY`) и не являются универсально доступными FBX-ассетами. Нельзя заявлять их наличие в отдельной лаборатории.
 - **ПОДТВЕРЖДЕНО АУДИТОМ 2026-11-13 (PREP-00):** Windows 11 Pro 10.0.26200 x64; AMD Ryzen 5 7535HS 6C/12T; 32 ГБ (2×16 DDR5-5600, доступно ОС 31.24 ГБ); **NVIDIA RTX 4060 Laptop 8188 MiB VRAM**, драйвер 610.47, CUDA UMD 13.3, свободно 6706 MiB; C: 68.2 ГБ свободно / D: 642.1 ГБ свободно. Evidence: `logs/PREP-00_detection_2026-11-13.txt`.
+- **УСТАНОВЛЕНО 2026-11-13 (PREP-01):** **Blender 5.2.4 LTS** (build `cd5dc428cce1`, 2026-11-10, внутренний Python 3.13.13) из официального zip `blender-5.2.4-windows-x64.zip` (405 779 142 Б), SHA-256 `bbd78f8931dc940444da4ff2983374930f9f5c092ae0e330588e9760bb9d967c` **совпал** с опубликованным. Распаковано портативно в `D:\programs\Blender\5.2\` (901.3 МБ, 6530 файлов). PATH не менялся, установщик не использовался. Пользовательский конфиг изолирован: `BLENDER_USER_CONFIG=D:\Projects\CubeGame Factory\environments\blender\config`. Evidence: `logs/PREP-01_rigify_skinning_2026-11-13.txt`, `logs/PREP-01_isolation_2026-11-13.txt`.
+- **Blender add-ons (факт, 5.2.4):** Rigify **0.6.10**, io_scene_fbx **5.15.0**, io_scene_gltf2 **5.2.41** — все встроенные (`5.2\scripts\addons_core\`), отдельной загрузки не требуют. Evidence: `logs/PREP-01_diagnostics_2026-11-13.txt`.
+- **Измерено в PREP-01:** полный прогон Rigify+skinning+FBX — **11.8–12.0 с** (два прогона), пиковый рабочий набор процесса Blender **394–402 МБ**, свободная RAM 20.43 → 20.45 ГБ, рендер Cycles **на CPU** (VRAM не занималась). Риг: metarig 159 костей → rig 706 (160 DEF + 546 control). Манекен: 1280 вершин (160 оболочек) → voxel remesh → 3926 вершин, 1 оболочка. Веса: 160 групп, 0 вершин без весов, но сумма весов 0.732–0.9999 (не нормирована). Деформация: IK 0.562 м, FK 0.332 м, прямой DEF 0.0 м. FBX 1.54 МБ → обратный импорт: 706 костей, 145 vgroups, деформация 0.566 м.
 - **Обнаруженное ПО (факт, версии и пути):** Python 3.13.14 (`C:\Users\bow\AppData\Local\Programs\Python\Python313\python.exe`, в PATH по умолчанию; второй 3.14.6 через `py`), pip 26.1.2, Git 2.55.0, VS Code 1.145.2, Unity Hub 3.22.5, Unity **6000.3.27f2** (`D:\Unity\Hub\Editor\6000.3.27f2\Editor\Unity.exe`) и 6000.6.7f1, Ollama 0.40.10 (не запущен), .NET 7/8, WinRAR 7.13.
 - **Отсутствует (подтверждено поиском):** **Blender**, Rigify (следствие), **ComfyUI**, Cascadeur, n8n, системный Node.js/npm/pnpm, ffmpeg в PATH, CUDA Toolkit (`nvcc`), 7-Zip (запись в реестре устарела — каталога нет).
 - **ComfyUI:** ТЗ и память считали его имеющимся (`USER_REPORTED`), но он **не найден** (нет каталога `*omfy*` на C:\ и D:\ до глубины 3–4, нет ярлыков, нет записи в реестре, порт 8188 не слушается). Требуется путь от пользователя; установку не дублировать.
@@ -100,17 +103,17 @@
 
 ## 5. Фактический прогресс подготовки (обновляется DeepSeek)
 
-**Последняя проверка состояния:** 2026-11-13, PREP-00 выполнен на реальной машине, доказательства сохранены. Установок ПО не было.
+**Последняя проверка состояния:** 2026-11-13 12:30 MSK, PREP-01 выполнен на реальной машине (Blender установлен и проверен), доказательства сохранены.
 
 **Нумерация синхронизирована с ТЗ (документ 01, §5).** Прежний индекс памяти `PREP-00…PREP-12` (v1.1) **SUPERSEDED**: он дробил этапы иначе и расходился с ТЗ. Действующая последовательность — PREP-00 → PREP-07 по ТЗ:
 
 | Этап (ТЗ) | Назначение | Статус | Evidence/путь |
 |---|---|---|---|
 | **PREP-00** | Аудит ПК, ПО, дисков, лицензий до загрузок | **READY_FOR_REVIEW** | `logs/PREP-00_detection_2026-11-13.txt`, `docs/TOOL_INVENTORY.md`, `docs/INSTALLATION_LOG.md`, `docs/LICENSE_MATRIX.md` |
-| **PREP-01** | Blender: установка/версия, GUI + background; Rigify: add-on, metarig, generate rig на собственной фигуре; встроенные Armature Modifier / Automatic Weights | `PLANNED` | цель: Blender 5.2.4 LTS zip с `ftp.blender.org`, SHA-256 опубликован |
-| **PREP-02** | Обмен форматами `.blend`/`.fbx`/`.glb`: import/export, масштаб, оси, материалы, кости, веса, анимация | `PLANNED` | — |
+| **PREP-01** | Blender: установка/версия, GUI + background; Rigify: add-on, metarig, generate rig на собственной фигуре; встроенные Armature Modifier / Automatic Weights; экспорт | **READY_FOR_REVIEW** (все операции SMOKE_PASS) | `logs/PREP-01_rigify_skinning_2026-11-13.txt`, `logs/PREP-01_headless_smoke_2026-11-13.txt`, `logs/PREP-01_diagnostics_2026-11-13.txt`, `logs/PREP-01_isolation_2026-11-13.txt`, `outputs/reports/prep01_rigify_skinning.json`, `outputs/blender/prep01_rigify_skinned.blend/.fbx`, `outputs/blender/prep01_rest_pose.png`, `outputs/blender/prep01_control_pose.png`, `outputs/blender/prep01_gui_open.png`, `docs/TEST_RESULTS.md` |
+| **PREP-02** | Обмен форматами `.blend`/`.fbx`/`.glb`: import/export, масштаб, оси, материалы, кости, веса, анимация | `PLANNED` | минимальный FBX-экспорт уже проверен в PREP-01 |
 | **PREP-03** | ComfyUI и локальные модели геометрии (≥2 подхода, 3D-to-3D отдельно от image-to-3D) | `BLOCKED` | ComfyUI не найден |
-| **PREP-04** | Autorig и skinning: нативные auto weights + rigid attachment; сравнение UniRig/MeshRig и др. | `PLANNED` | — |
+| **PREP-04** | Autorig и skinning: нативные auto weights + rigid attachment; сравнение UniRig/MeshRig и др. | `PLANNED` | частично: auto weights проверены на манекене (PREP-01) |
 | **PREP-05** | Новые анимации: реальный bone clip из Blender/Cascadeur; локальные AI motion кандидаты | `PLANNED` | — |
 | **PREP-06** | Оркестрация и контракты без кастомизации: manifest/schema, команды-образцы, решение Python vs n8n | `PLANNED` | — |
 | **PREP-07** | Интеграционная демонстрация: модель → rig → skinning → клип → воспроизводимость | `PLANNED` | — |
@@ -121,9 +124,9 @@
 
 | Инструмент | Задача | Факт установки (2026-11-13) | Следующее действие |
 |---|---|---|---|
-| **Blender** | mesh, armature, skinning, animation export, CLI | **NOT_FOUND** | PREP-01: официальный 5.2.4 LTS zip → `D:\programs\Blender\5.2\` |
-| Rigify | metarig → control rig | N/A (зависит от Blender) | Проверить штатное наличие сразу после установки |
-| Python + venv | smoke runner, среды | **3.13.14** в PATH; `venv` работает | Создать `environments\venv-prep` на 3.13.14 |
+| **Blender** | mesh, armature, skinning, animation export, CLI | **5.2.4 LTS** — `D:\programs\Blender\5.2\blender.exe`; SHA-256 сверен; GUI/headless/Rigify/skinning/FBX проверены | PREP-02: обмен форматами |
+| Rigify | metarig → control rig | **0.6.10** встроенный; rig 706 костей (160 DEF); auto weights + позы проверены | PREP-04: сравнить с autorig-кандидатами |
+| Python + venv | smoke runner, среды | **3.13.14** в PATH; `venv` работает | `environments\venv-prep` **не создавался осознанно** — Blender несёт свой Python 3.13.13, внешний runner появится на PREP-02 |
 | **ComfyUI** | AI-workflows | **NOT_FOUND** (не подтверждён) | Получить путь от пользователя; не дублировать |
 | Cascadeur | авторинг motion, FBX | **NOT_INSTALLED** | Сначала лицензия/тариф/экспорт FBX — потом решение |
 | Локальная 3D AI | новое 3D / переработка mesh | NOT_SELECTED | Сравнить кандидатов и VRAM (≤6.7 ГБ фактически) |
@@ -140,10 +143,17 @@
 ## 7. Проблемы, риски и открытые вопросы
 
 **Подтверждённые блокеры (PREP-00):**
-- **B1 — Blender отсутствует.** Не установлен, не найден на диске. Блокирует PREP-01, PREP-02 и все последующие этапы, требующие DCC.
+- **B1 — Blender отсутствует.** **ЗАКРЫТ 2026-11-13 (PREP-01):** установлен Blender 5.2.4 LTS, все базовые операции проверены.
 - **B2 — ComfyUI не найден.** Не подтверждён ни каталог, ни ярлык, ни реестр, ни порт 8188. Блокирует PREP-03; нужен фактический путь от пользователя.
 - **B3 — нет remote Factory-репозитория** (`REPOSITORY_URL=NOT_CONFIGURED`) → публикация отчётов невозможна, работа локальная.
 - **B4 — Git identity была не настроена** (`user.name`/`user.email` пусты). **ЗАКРЫТ 2026-11-13:** identity задана локально в репозитории (`DeepSeek Harness`, `factory-lab@localhost`); global-настройки не менялись.
+
+**Ловушки Blender, выявленные практикой (PREP-01) — не повторять ошибку:**
+- `addon_utils.enable("rigify")` в 5.2.4 **непригоден**: операторы регистрируются, но `bpy.ops.pose.rigify_generate()` падает с `'RigifyParameters' object has no attribute 'make_custom_pivot'`. Работает `bpy.ops.preferences.addon_enable(module='rigify')`.
+- Bone Heat Weighting **полностью отказывает** на несвязной геометрии (160 отдельных боксов → 0 весов на 1280 вершинах). Сначала склеить геометрию в одну оболочку (voxel remesh), потом auto weights.
+- Rigify DEF-кости **не** управляются напрямую (constraints): позы только через control-кости (`hand_ik.*`/`foot_ik.*`, `*_fk.*` при `IK_FK=1.0`).
+- Auto weights **не нормирует** веса: сумма на вершину 0.73–0.9999 → нужен шаг нормализации (PIPELINE_GAPS F8).
+- FBX выгружает весь control rig (706 костей) — чистый game-skeleton требует отдельного deform-only экспорта (PIPELINE_GAPS F9).
 
 **Известные риски:**
 - 8 ГБ VRAM ограничивают локальные 3D / motion модели;
@@ -157,8 +167,8 @@
 
 **Открытые вопросы к пользователю (минимально необходимое):**
 1. Где находится ComfyUI (путь) — или его нужно устанавливать заново?
-2. Разрешение на скачивание Blender 5.2.4 LTS (~405 МБ) с официального зеркала — или подтверждение, что можно без отдельного согласования.
-3. URL отдельного GitHub-репозитория Factory (для `factory/work`).
+2. URL отдельного GitHub-репозитория Factory (для `factory/work`).
+3. Согласование будущих AI-весов (источник, размер, лицензия, VRAM) — отдельно на PREP-03/04/05.
 
 ## 8. Хронология работ (append-only, кратко)
 
@@ -170,21 +180,26 @@
 | 2026-11-13 | PREP-00 (сессия 1) | Созданы `docs/TOOL_INVENTORY.md`, `docs/INSTALLATION_LOG.md`, `docs/LICENSE_MATRIX.md`, `docs/TEST_RESULTS.md`, `docs/PIPELINE_GAPS.md`, `README.md`. Лицензия Blender (GPL-2.0-or-later) и сборка 5.2.4 LTS подтверждены по официальному зеркалу | `docs\*`, `logs\*` | PREP-01: установка Blender |
 | 2026-11-13 | Консолидация каталога | Рабочая папка сведена к `D:\Projects\CubeGame Factory`: перенесены журналы, доказательства и git-история из `CubeGameFactoryLab`; путь в AGENTS.md исправлен (3 вхождения); устаревшая память v1.1 перемещена в `docs\archive\` | `git log`, `docs\archive\` | Настроить режим |
 | 2026-11-13 | Режим DSH | Создан и установлен пользовательский пресет `cubegame-factory` (CubeGame Factory) на базе Standard: persona с рабочей директорией, четырьмя документами, RAM-first и правилами отчётности. Строка активна, встроенные режимы не изменены | `plugins\cubegame-factory-preset\`; `C:\Users\bow\.dsh\profiles\desktop\package.json` | Открыть новый чат в этом режиме |
+| 2026-11-13 | PREP-01 (установка) | Скачан `blender-5.2.4-windows-x64.zip` (405 779 142 Б) + `.sha256` с `download.blender.org`; SHA-256 сверен (`bbd78f89…967c`), распакован `tar` в `D:\programs\Blender\5.2\` (901.3 МБ). PATH не менялся, конфиг изолирован в `environments\blender\config` | `logs\PREP-01_isolation_2026-11-13.txt`; `docs\INSTALLATION_LOG.md` | Проверить запуск |
+| 2026-11-13 | PREP-01 (smoke) | Headless `--background` PASS: версия 5.2.4 LTS, Python 3.13.13, создание/сохранение `.blend` (86 КБ). GUI PASS: открыт `prep01_rigify_skinned.blend`, заголовок окна подтверждает файл, скриншот сохранён | `logs\PREP-01_headless_smoke_2026-11-13.txt`; `outputs\blender\prep01_gui_open.png` | Rigify |
+| 2026-11-13 | PREP-01 (отладка) | Найдены и зафиксированы 3 реальные ловушки: `addon_utils.enable('rigify')` ломает генерацию; heat weighting отказывает на несвязных боксах (0 весов); DEF-кости Rigify не управляются напрямую. Исправлено: официальный `addon_enable`, voxel remesh в одну оболочку, позы через control-кости | `logs\PREP-01_diagnostics_2026-11-13.txt` | Полный прогон |
+| 2026-11-13 | PREP-01 (результат) | Полный прогон PASS: rigify_generate (159→706 костей), auto weights (160 групп, 0 вершин без весов), деформация IK 0.562 м / FK 0.332 м, рендеры rest+posed различаются, `.blend` 574 КБ, FBX 1.54 МБ и обратный импорт с рабочей деформацией 0.566 м. Прогон 11.8–12.0 с, пик 394–402 МБ RAM, CPU-рендер (VRAM не занималась) | `logs\PREP-01_rigify_skinning_2026-11-13.txt`; `outputs\reports\prep01_rigify_skinning.json`; `outputs\blender\prep01_rigify_skinned.blend/.fbx`; PNG | PREP-02 |
+| 2026-11-13 | PREP-01 (документация) | Обновлены `docs\TEST_RESULTS.md` (PREP-01 yaml + измерения + ловушки), `docs\TOOL_INVENTORY.md`, `docs\INSTALLATION_LOG.md`, `docs\LICENSE_MATRIX.md`, `docs\PIPELINE_GAPS.md` (G1 закрыт, добавлены F8–F10), `README.md` | `docs\*`, `README.md` | Коммит в `factory/work` |
 
 ## 9. Что делать DeepSeek прямо в следующем чате
 
 **Выполнено в PREP-00 (2026-11-13):** пп. 1–4 ниже закрыты — документы прочитаны, каталог создан, аудит проведён, журналы написаны.
 
-**Следующая сессия — PREP-01:**
+**Выполнено в PREP-01 (2026-11-13):** Blender 5.2.4 LTS установлен и проверен; Rigify сгенерировал rig; auto weights, контрольные позы, FBX-экспорт и обратный импорт доказаны на собственной фигуре. Статус `READY_FOR_REVIEW`.
 
-1. Перечитать `AGENTS.md`, `01`, `02`, `03`; сверить фактическое состояние (`Test-Path D:\programs\Blender\5.2\blender.exe`).
-2. Проверить наличие Blender повторно. Если нет — скачать `blender-5.2.4-windows-x64.zip` + `blender-5.2.4.sha256` с `https://ftp.blender.org/release/Blender5.2/`, сверить SHA-256, распаковать в `D:\programs\Blender\5.2\` (PATH не менять, вызывать по абсолютному пути).
-3. Зафиксировать версию: `blender --version`; проверить GUI (открыть, создать куб, сохранить `.blend` в `outputs\blender\`) и headless: `blender --background --python-expr "..."`.
-4. Включить Rigify (`bpy.ops.preferences.addon_enable(module='rigify')` или UI), проверить наличие `rigify_meta_*` метаригов, сгенерировать риг на **собственной** тестовой фигуре, сохранить `.blend` и скриншот/лог.
-5. Проверить `Armature Modifier` и `Parent with Automatic Weights` на собственной фигуре; зафиксировать, что вызывается через API.
-6. Создать `environments\venv-prep` на Python 3.13.14 (без глобальных установок).
-7. Обновить `docs/TEST_RESULTS.md` (PREP-01 yaml), `docs/TOOL_INVENTORY.md`, этот файл; локальный commit в `factory/work`. Публикация — только при появлении remote.
-8. **Не начинать** PREP-02, пока PREP-01 не даст реальный `.blend` с ригом. Не писать CubeGame-специфичные скрипты.
+**Следующая сессия — PREP-02 (обмен форматами):**
+
+1. Перечитать `AGENTS.md`, `01`, `02`, `03`; сверить состояние: `Test-Path D:\programs\Blender\5.2\blender.exe`, наличие `outputs\blender\prep01_rigify_skinned.blend`.
+2. На **собственной** тестовой модели проверить обмен: `.blend` → `.fbx` → импорт, `.blend` → `.glb` → импорт; зафиксировать масштаб, оси (Y-up vs Z-up), материалы, дерево костей, веса, наличие action.
+3. Составить таблицу `INPUT→OUTPUT` с потерями по каждому формату; отдельно зафиксировать, что теряется при FBX-экспорте control rig (706 костей) и как получить deform-only скелет.
+4. Проверить простой анимационный клип (idle/swing) и его выживание после экспорта/импорта — это мост к PREP-05.
+5. Обновить `docs/TEST_RESULTS.md` (PREP-02 yaml), `docs/PIPELINE_GAPS.md`, эту память; локальный commit в `factory/work`.
+6. **Не начинать** PREP-03 (ComfyUI), пока пользователь не подтвердит путь установки. Не писать CubeGame-специфичные скрипты; Unity не запускать.
 
 ## 10. Протокол обновления межчатовой памяти
 
