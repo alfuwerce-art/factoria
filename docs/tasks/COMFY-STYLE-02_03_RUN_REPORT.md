@@ -50,8 +50,8 @@ IDLE_VRAM=SAFE_BASELINE +79 MiB относительно baseline, CPU_FALLBACK 
 BLOCKERS=см. §10
 
 GIT_BRANCH=factory/work
-PUSH=<см. итог>
-REMOTE_SHA=<см. итог>
+PUSH=OK
+REMOTE_SHA=f9c90ea (HEAD == origin/factory/work, проверено после push)
 
 NEXT=owner-run first generation + RAM/VRAM measurement
 ```
