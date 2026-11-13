@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+environments/venv*/
+environments/**/Lib/
+environments/**/Scripts/
+environments/**/pyvenv.cfg
+
+# Инструменты и большие бинарники (устанавливаются локально, не публикуются)
+tools/
+*.exe
+*.msi
+*.zip
+*.7z
+*.tar.xz
+*.dmg
+
+# AI-веса и кэши (никогда не публиковать)
+*.ckpt
+*.safetensors
+*.pt
+*.pth
+*.onnx
+*.bin
+models/
+weights/
+
+# Тяжёлые выходы DCC (публикуются только по отдельному решению)
+outputs/**/*.blend1
+outputs/**/*.fbx
+outputs/**/*.glb
+outputs/**/*.gltf
+samples/**/*.fbx
+samples/**/*.glb
+
+# Логи запусков — публикуются как доказательства только текстовые .txt/.md/.log
+*.log
+
+# ОС / редакторы
+Thumbs.db
+desktop.ini
+.vs/
+.vscode/
+*.swp
