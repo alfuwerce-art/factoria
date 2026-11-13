@@ -6,6 +6,16 @@
 
 ---
 
+## Репозиторий и маршрутизация
+
+- **GitHub:** [`alfuwerce-art/factoria`](https://github.com/alfuwerce-art/factoria) — отдельный репозиторий всего проекта Factory.
+- **Ветки:** `main` — только утверждённая стабильная документация (исполнитель туда не пушит); `factory/work` — разработка, отчёты, скрипты, результаты испытаний и межчатовая память.
+- **Маршрутизация чатов:** правило в [`CHAT_ROUTING.md`](CHAT_ROUTING.md). Префикс «мод» в запросе пользователя означает Factoria и запрещает чтение игрового CubeGame; без префикса — основная игра.
+- **Исторический контекст:** исследования M1 из CubeGame сохранены в [`references/cubegame-m1/`](references/cubegame-m1/README.md) — это справка, а не текущая документация.
+- **Миграция:** состояние переноса и оставшиеся шаги — [`docs/MIGRATION_STATUS.md`](docs/MIGRATION_STATUS.md).
+
+---
+
 ## Состояние на 2026-11-13
 
 | Пункт | Значение |
@@ -15,7 +25,7 @@
 | Blender | **5.2.4 LTS** → `D:\programs\Blender\5.2\blender.exe` (SHA-256 сверен, PATH не менялся) |
 | Rigify | **0.6.10**, встроенный; генерирует rig (160 deform + 546 control), skinning работает |
 | ComfyUI | **НЕ НАЙДЕН** (расхождение с ТЗ) → нужен путь от пользователя |
-| Git / remote | локальный репозиторий; remote **не настроен** (`PUSH=NOT_CONFIGURED`) |
+| Git / remote | `origin` = `alfuwerce-art/factoria.git`; рабочая ветка `factory/work`; `main` не изменяется исполнителем |
 | Режим DSH | **CubeGame Factory** (`cubegame-factory`) — выбирается при создании нового чата |
 
 **Начало работы в новом чате:** выберите режим **CubeGame Factory** и папку `D:\Projects\CubeGame Factory`; агент первым действием войдёт в неё и прочитает четыре документа в порядке AGENTS → 01 → 02 → 03.
