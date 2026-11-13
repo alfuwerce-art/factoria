@@ -252,3 +252,5 @@
 - если пользователь принял результат, записать дату и формулировку приёмки; иначе оставить `READY_FOR_REVIEW`.
 
 **Состояние на создание файла:** PREP не выполнялся; все три документа являются спецификацией и начальной памятью. Реальные установленные компоненты DeepSeek установит по проверке, а не по предположениям.
+
+- **ORC-02R correction (2026-11-13, APPROVED):** previous ORC-02 implementation went the wrong direction by decomposing/reassembling existing Orc voxels. Current task is [ORC-02R_NEW_MODEL_GENERATION_TASK.md](docs/tasks/ORC-02R_NEW_MODEL_GENERATION_TASK.md): existing Orc is **reference-only for measurements/proportions**; final Orc geometry must be **newly generated from scratch** by procedural Blender/Python rules with large/medium/small voxel detail layers. Old source geometry may not be reused as final geometry. No rig/animation/emotions yet. Previous ORC-02 technical results remain evidence for I/O/automation only and are not the target model.
