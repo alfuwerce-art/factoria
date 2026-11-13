@@ -1,8 +1,8 @@
 {
   "id": "791291c5-35e0-562a-bdf9-e84d1515630d",
   "revision": 0,
-  "last_node_id": 8,
-  "last_link_id": 9,
+  "last_node_id": 9,
+  "last_link_id": 11,
   "nodes": [
     {
       "id": 1,
@@ -51,7 +51,8 @@
           "name": "MODEL",
           "type": "MODEL",
           "links": [
-            3
+            3,
+            4
           ]
         },
         {
@@ -59,14 +60,15 @@
           "type": "CLIP",
           "links": [
             1,
-            2
+            2,
+            5
           ]
         },
         {
           "name": "VAE",
           "type": "VAE",
           "links": [
-            8
+            10
           ]
         }
       ],
@@ -107,7 +109,7 @@
           "name": "CONDITIONING",
           "type": "CONDITIONING",
           "links": [
-            4
+            6
           ]
         }
       ],
@@ -148,7 +150,7 @@
           "name": "CONDITIONING",
           "type": "CONDITIONING",
           "links": [
-            5
+            7
           ]
         }
       ],
@@ -183,7 +185,7 @@
           "name": "LATENT",
           "type": "LATENT",
           "links": [
-            6
+            8
           ]
         }
       ],
@@ -192,17 +194,70 @@
       },
       "widgets_values": [
         512,
-        768,
+        512,
         1
       ],
       "widgets_values_named": {
         "width": 512,
-        "height": 768,
+        "height": 512,
         "batch_size": 1
       }
     },
     {
       "id": 6,
+      "type": "LoraLoader",
+      "pos": [
+        0,
+        1020
+      ],
+      "size": [
+        320,
+        120
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 2,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 4
+        },
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 5
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": []
+        },
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoraLoader"
+      },
+      "widgets_values": [
+        "",
+        1.0,
+        1.0
+      ],
+      "widgets_values_named": {
+        "lora_name": "",
+        "strength_model": 1.0,
+        "strength_clip": 1.0
+      },
+      "title": "LoRA (muted - not trained yet)"
+    },
+    {
+      "id": 7,
       "type": "KSampler",
       "pos": [
         480,
@@ -213,7 +268,7 @@
         270
       ],
       "flags": {},
-      "order": 5,
+      "order": 6,
       "mode": 0,
       "inputs": [
         {
@@ -224,17 +279,17 @@
         {
           "name": "positive",
           "type": "CONDITIONING",
-          "link": 4
+          "link": 6
         },
         {
           "name": "negative",
           "type": "CONDITIONING",
-          "link": 5
+          "link": 7
         },
         {
           "name": "latent_image",
           "type": "LATENT",
-          "link": 6
+          "link": 8
         }
       ],
       "outputs": [
@@ -242,7 +297,7 @@
           "name": "LATENT",
           "type": "LATENT",
           "links": [
-            7
+            9
           ]
         }
       ],
@@ -267,10 +322,10 @@
         "scheduler": "karras",
         "denoise": 1.0
       },
-      "title": "KSampler (box 512-class, batch 1)"
+      "title": "KSampler (512-class, batch 1)"
     },
     {
-      "id": 7,
+      "id": 8,
       "type": "VAEDecode",
       "pos": [
         830,
@@ -281,18 +336,18 @@
         50
       ],
       "flags": {},
-      "order": 6,
+      "order": 7,
       "mode": 0,
       "inputs": [
         {
           "name": "samples",
           "type": "LATENT",
-          "link": 7
+          "link": 9
         },
         {
           "name": "vae",
           "type": "VAE",
-          "link": 8
+          "link": 10
         }
       ],
       "outputs": [
@@ -300,7 +355,7 @@
           "name": "IMAGE",
           "type": "IMAGE",
           "links": [
-            9
+            11
           ]
         }
       ],
@@ -310,7 +365,7 @@
       "widgets_values": []
     },
     {
-      "id": 8,
+      "id": 9,
       "type": "SaveImage",
       "pos": [
         1100,
@@ -321,13 +376,13 @@
         480
       ],
       "flags": {},
-      "order": 7,
+      "order": 8,
       "mode": 0,
       "inputs": [
         {
           "name": "images",
           "type": "IMAGE",
-          "link": 9
+          "link": 11
         }
       ],
       "outputs": [
@@ -369,55 +424,71 @@
       3,
       2,
       0,
-      6,
+      7,
       0,
       "MODEL"
     ],
     [
       4,
-      3,
+      2,
       0,
       6,
+      0,
+      "MODEL"
+    ],
+    [
+      5,
+      2,
+      1,
+      6,
+      1,
+      "CLIP"
+    ],
+    [
+      6,
+      3,
+      0,
+      7,
       1,
       "CONDITIONING"
     ],
     [
-      5,
+      7,
       4,
       0,
-      6,
+      7,
       2,
       "CONDITIONING"
-    ],
-    [
-      6,
-      5,
-      0,
-      6,
-      3,
-      "LATENT"
-    ],
-    [
-      7,
-      6,
-      0,
-      7,
-      0,
-      "LATENT"
     ],
     [
       8,
-      2,
-      2,
+      5,
+      0,
       7,
-      1,
-      "VAE"
+      3,
+      "LATENT"
     ],
     [
       9,
       7,
       0,
       8,
+      0,
+      "LATENT"
+    ],
+    [
+      10,
+      2,
+      2,
+      8,
+      1,
+      "VAE"
+    ],
+    [
+      11,
+      8,
+      0,
+      9,
       0,
       "IMAGE"
     ]

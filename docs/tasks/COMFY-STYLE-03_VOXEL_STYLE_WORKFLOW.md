@@ -1,81 +1,149 @@
-# COMFY-STYLE-03 — FACTORIA VOXEL_STYLE workflow
+# TASK — COMFY-STYLE-03: Factoria VOXEL_STYLE workflow
 
-**Проект:** Factoria · **Репозиторий:** `alfuwerce-art/factoria` · **Ветка:** `factory/work`
-**Рабочая папка:** `D:\Projects\CubeGame Factory` · **Статус:** AUTHORIZED (2026-11-13)
-**Основание:** FACT-D19. Документ восстановлен по утверждённому тексту ТЗ сессии 2026-11-13.
+**Status:** AUTHORIZED / PREPARE AFTER COMFY-STYLE-02  
+**Date:** 2026-11-13  
+**Project:** Factoria  
+**Repo:** `alfuwerce-art/factoria`, branch `factory/work`
 
-## Цель
+## Goal
 
-Владелец сразу открывает готовый workflow и начинает тестировать фиксацию voxel-стиля
-персонажей Factoria. Главный критерий: запустить ComfyUI → открыть Factoria workflow →
-выбрать Orc reference → ввести character prompt → Queue → получить изображение →
-увидеть реальный расход RAM/VRAM.
+Prepare a ComfyUI workflow whose purpose is **not generic image generation**, but locking the approved Factoria voxel/cuboid character style from a local visual reference.
 
-## Артефакты (в репозитории)
+The reference image is local-only and must not be published to GitHub unless rights are explicitly cleared.
 
-```
-workflows/factoria_voxel_style/
-  FACTORIA_VOXEL_STYLE_BASE.json              базовая генерация
-  FACTORIA_VOXEL_STYLE_IPADAPTER.json         style reference через IPAdapter
-  FACTORIA_VOXEL_STYLE_CONTROL_TEMPLATE.json  + отключаемая ветка ControlNet
-  voxel_style_prompt_v1.json                  prompt contract (единый источник стиля)
-  README.md                                    инструкция владельцу
-scripts/comfyui/
-  build_factoria_voxel_workflows.py           сборка workflow из contract + /object_info
-  validate_factoria_workflows.py              проверка серверным validate_prompt
-  factoria_launch.ps1                         запуск preset + измерение
-  launch_safe_baseline.bat / launch_cpu_fallback.bat
-```
+## Style conditioning stack
 
-## A. FACTORIA_VOXEL_STYLE_BASE.json
+### A. IPAdapter = visual style reference
+Use the approved Orc reference image as the primary visual style condition.
 
-`CheckpointLoaderSimple → CLIPTextEncode(+/-) → EmptyLatentImage → KSampler → VAEDecode → SaveImage`.
-Параметры: 512-class (512×768), batch = 1, без ControlNet, без IPAdapter, монитор ресурсов —
-панель Crystools (глобальная для UI).
+Required intent:
+- transfer voxel/cuboid visual language;
+- preserve block-size hierarchy;
+- preserve compact chunky character proportions;
+- preserve pixel/block face treatment;
+- preserve low-smoothness / hard-edged shapes;
+- avoid copying the exact identity, pose, costume or composition when generating other characters.
 
-## B. FACTORIA_VOXEL_STYLE_IPADAPTER.json
+Prefer a style-oriented IPAdapter mode where supported. Start conservatively; weight is a tuneable parameter, not a fixed truth.
 
-Reference image задаёт **визуальный voxel-язык**. Готовые места: `LoadImage`, `CLIPVisionLoader`
-(mute-слот), `IPAdapterUnifiedLoader`, `IPAdapterAdvanced`, style weight, start/end conditioning.
-Если веса не установлены — workflow структурно готов, но не обязан запускаться.
+### B. Text prompt = identity/content
+Text defines the requested character:
+- race/species;
+- gender/body type;
+- clothing/armor;
+- accessories;
+- color accents;
+- pose requirement;
+- front/side/3-4 presentation.
 
-## C. FACTORIA_VOXEL_STYLE_CONTROL_TEMPLATE.json
+Text must also reinforce:
+- voxel/cuboid construction;
+- blocks of varied sizes;
+- hard edges;
+- modular body segments;
+- non-cartoon proportions;
+- game-ready concept presentation.
 
-То же + отключаемая ветка ControlNet: Canny / Lineart (силуэт), DW-Pose (поза), Depth при
-необходимости. ControlNet не обязателен для базовой генерации: по умолчанию ветка в BYPASS.
+### C. ControlNet = structure later
+Prepare a disabled/optional branch for silhouette/pose control using controlnet-aux preprocessors.
 
-## Prompt contract
+Do not require ControlNet weights in the first style-lock test. After IPAdapter style is proven, add only the specific ControlNet required for:
+- silhouette/edge preservation (Canny/Lineart), or
+- pose (OpenPose/DWPose).
 
-- **Stable style prefix (не менять):** stylized voxel/cuboid 3D character, hard-edged block
-  geometry, blocks of varied sizes (large → silhouette, medium → anatomy/clothing, small →
-  face/details), compact readable silhouette, modular limbs, pixel/block face, hard surfaces,
-  no smooth organic sculpting, neutral studio presentation, пригодность для image-to-3D.
-- **Variable character block:** race/species, sex, body type, face traits, clothing, armor,
-  accessories, palette, pose, camera.
-- **Negative (обязательно):** smooth plastic, rounded cartoon, anime, photorealistic skin,
-  painterly, soft clay, chibi, fused limbs, Minecraft-style primitive cube-only body,
-  cluttered background, extreme perspective, motion blur.
+### D. LoRA = future persistent style lock
+Do not train LoRA yet.
 
-## Orc reference
+If IPAdapter + prompt still drifts across different characters, the next escalation is a dedicated Factoria style LoRA trained only on approved style examples. LoRA would become the persistent style prior; IPAdapter would remain useful for per-character reference images.
 
-Используется позже локально как style image. Не публикуется в GitHub, не встраивается в
-workflow; workflow ожидает локальный файл в `ComfyUI/input/`. Цель — переносить стиль,
-а не копировать Орка.
+## VOXEL_STYLE prompt contract
 
-## Что должно сохраняться / меняться
+Positive prompt template should contain a stable style prefix and a variable character block.
 
-Сохраняется: voxel/cuboid язык, размеры и иерархия блоков, уровень детализации лица,
-жёсткие формы, характер пропорций, чистая студийная подача, отсутствие гладкой мультяшности.
-Меняется: раса, лицо, одежда, броня, аксессуары, цвета, телосложение.
+Stable style intent:
+- stylized voxel/cuboid 3D character;
+- hard-edged block geometry;
+- varied block sizes (large silhouette blocks, medium anatomy/clothing blocks, small face/detail blocks);
+- compact readable silhouette;
+- modular limbs;
+- pixel/block face;
+- no smooth organic sculpting;
+- neutral studio/background presentation suitable for later image-to-3D reconstruction.
 
-## Smoke test (разрешено исполнителю)
+Variable block:
+- species / sex / age band;
+- body type;
+- face traits;
+- outfit / armor;
+- accessories;
+- palette;
+- pose / camera.
 
-Запуск ComfyUI, проверка web UI/API, импорт custom nodes, отсутствие missing dependencies,
-checkpoint detection, открытие/валидация workflow, Crystools, работа launch presets.
-**Не** выполнять художественную генерацию Orc — первая реальная генерация и замер памяти
-делаются после отчёта.
+Negative intent:
+- smooth plastic;
+- rounded cartoon;
+- anime;
+- photoreal skin;
+- painterly brushwork;
+- soft clay;
+- low-information Minecraft cube-only character;
+- exaggerated chibi;
+- fused limbs;
+- cluttered background;
+- extreme perspective;
+- motion blur.
 
-## Запрещено на этом этапе
+## Workflow variants to prepare
 
-Финальная 3D-модель, TripoSR, Blender geometry, rig, animation, emotions, Unity, batch
-generation, десятки extensions, тяжёлые веса без необходимости, обучение LoRA и сбор датасета.
+1. `FACTORIA_VOXEL_STYLE_BASE.json`
+   - SD1.5 baseline;
+   - txt2img only;
+   - fixed style prefix;
+   - 512-class, batch 1;
+   - resource monitoring.
+
+2. `FACTORIA_VOXEL_STYLE_IPADAPTER.json`
+   - same base;
+   - local style reference image;
+   - IPAdapter conditioning;
+   - owner can tune style weight;
+   - no ControlNet required.
+
+3. `FACTORIA_VOXEL_STYLE_CONTROL_TEMPLATE.json`
+   - IPAdapter branch + optional disabled ControlNet branch;
+   - used later for front/profile/pose consistency.
+
+## Memory constraints
+
+Hard owner limits for the entire generation task:
+- RAM <=15 GB peak;
+- additional VRAM <=2 GB over baseline.
+
+The IPAdapter model itself is small compared with the required CLIP Vision encoder, but the complete runtime must be measured. Do not claim the IPAdapter workflow fits until an actual run records peaks.
+
+First test order:
+1. BASE;
+2. IPAdapter;
+3. optional ControlNet only if the first two pass.
+
+If IPAdapter breaks the cap, keep the style spec but mark the workflow `REJECTED_BY_MEMORY` and do not silently relax the limit.
+
+## Output acceptance
+
+This stage does NOT require a final game model.
+
+Success means:
+- different generated Orc variants clearly share the same voxel visual language;
+- changing character attributes does not destroy the style;
+- output remains suitable as a clean image-to-3D reference;
+- style recipe is reproducible from saved workflow + prompt contract + reference.
+
+Status:
+- `STYLE_BASELINE_PENDING_REVIEW`
+- `STYLE_REWORK`
+- `STYLE_APPROVED` only by owner.
+
+## Restrictions
+
+No rigging, animation, emotions, Unity integration or TripoSR in this task.
+No publication of the local reference image or generated derivative images unless explicitly approved.

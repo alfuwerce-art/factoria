@@ -33,9 +33,12 @@ SAFE_BASELINE_LAUNCH=scripts\comfyui\launch_safe_baseline.bat  (--novram --reser
 CPU_FALLBACK_LAUNCH=scripts\comfyui\launch_cpu_fallback.bat    (--cpu)
 
 BASE_WORKFLOW=workflows\factoria_voxel_style\FACTORIA_VOXEL_STYLE_BASE.json
+STYLE_REFERENCE_TEMPLATE=workflows\factoria_voxel_style\FACTORIA_VOXEL_STYLE_IPADAPTER.json
 IPADAPTER_WORKFLOW=workflows\factoria_voxel_style\FACTORIA_VOXEL_STYLE_IPADAPTER.json
 CONTROL_TEMPLATE=workflows\factoria_voxel_style\FACTORIA_VOXEL_STYLE_CONTROL_TEMPLATE.json
 VOXEL_STYLE_PROMPT_CONFIG=workflows\factoria_voxel_style\voxel_style_prompt_v1.json
+
+WEIGHTS_DEFERRED=IPAdapter + ControlNet (не скачаны; список §6)
 
 IPADAPTER_REQUIRED_WEIGHTS=см. §6 (не скачаны, ожидают согласования)
 CONTROLNET_REQUIRED_WEIGHTS=см. §6 (не скачаны, ожидают согласования)
@@ -67,8 +70,14 @@ NEXT=owner-run first generation + RAM/VRAM measurement
 | Custom nodes импортируются без ошибок | лог сервера `logs\COMFY-STYLE_server_*` | нет строк `IMPORT FAILED`/`Cannot import`; есть только информационное `comfy_kitchen backend triton: unavailable` (triton не требуется) |
 | Crystools мониторинг | `GET /crystools/monitor/GPU` → `[{"index":0,"name":"NVIDIA GeForce RTX 4060 Laptop GPU"}]`; `GET /crystools/monitor/HDD` → `["C:\\","D:\\"]`; ws-событие `crystools.monitor` | backend работает, панель в UI присутствует (`custom_nodes\ComfyUI-Crystools\web\`) |
 | Checkpoint детектируется | `/api/object_info` → `CheckpointLoaderSimple.ckpt_name` | `["v1-5-pruned-emaonly-fp16.safetensors"]` |
-| Workflow принимается валидатором ComfyUI | `validate_factoria_workflows.py` (в процессе: `nodes.init_extra_nodes()` + `execution.validate_prompt`) | BASE: **PASS**, `prompt_nodes=7`, `outputs=['8']`; IPADAPTER и CONTROL_TEMPLATE: структурно PASS, упираются только в отсутствующий локальный reference-файл (owner action) |
+| Workflow принимается валидатором ComfyUI | `validate_factoria_workflows.py` (в процессе: `nodes.init_extra_nodes()` + `execution.validate_prompt`) | BASE: **PASS**, `prompt_nodes=7`, `outputs=['9']`; IPADAPTER и CONTROL_TEMPLATE: структурно PASS, упираются только в отсутствующий локальный reference-файл (owner action) |
 | Структурная сборка workflow | `build_factoria_voxel_workflows.py` → проверка типов нод, слотов, типов связей, количества и значений widget'ов против живого `/object_info` | 3/3 PASS (`measurements\factoria_voxel_style_build_report.json`) |
+
+**Совместимость IPAdapter_plus (требование COMFY-STYLE-02):** upstream `cubiq/ComfyUI_IPAdapter_plus` находится
+в режиме maintenance-only (последний push 2025-04-14, GitHub API `pushed_at`), но **совместим с установленным
+ComfyUI 0.45.0**: ноды `IPAdapterUnifiedLoader`, `IPAdapterAdvanced`, `IPAdapterModelLoader` регистрируются без
+ошибок импорта и присутствуют в `/api/object_info` (1213 типов нод). При поломке в будущем — изолировать ноду,
+а не откатывать всё окружение.
 
 ---
 
@@ -168,7 +177,7 @@ ComfyUI значения widget'ов позиционные, ручная пра
 
 | Workflow | Ноды / связи | Что внутри | Статус проверки |
 |---|---|---|---|
-| `FACTORIA_VOXEL_STYLE_BASE.json` | 8 / 9 | CheckpointLoaderSimple → 2×CLIPTextEncode → EmptyLatentImage(512×768, batch 1) → KSampler(dpmpp_2m/karras, 28 шагов, cfg 7.0, fixed seed) → VAEDecode → SaveImage(`factoria/voxel_style_base`) + MarkdownNote с инструкцией | **PASS** серверным `validate_prompt` |
+| `FACTORIA_VOXEL_STYLE_BASE.json` | 9 / 11 | CheckpointLoaderSimple → 2×CLIPTextEncode → EmptyLatentImage(**512×512**, batch 1) → KSampler(dpmpp_2m/karras, 28 шагов, cfg 7.0, fixed seed) → VAEDecode → SaveImage(`factoria/voxel_style_base`); плюс MarkdownNote с инструкцией и **muted** `LoraLoader` (заготовка под будущую style-LoRA, не обучается) | **PASS** серверным `validate_prompt` |
 | `FACTORIA_VOXEL_STYLE_IPADAPTER.json` | 12 / 13 | BASE + LoadImage(reference) + IPAdapterUnifiedLoader(PLUS) + IPAdapterAdvanced(weight 0.75, `style transfer`, start 0.0/end 1.0) + mute-слот CLIPVisionLoader | структурно PASS; не запускается до загрузки весов (так и задумано) |
 | `FACTORIA_VOXEL_STYLE_CONTROL_TEMPLATE.json` | 18 / 20 | IPADAPTER + ветка ControlNet: LoadImage(control) → Canny/Lineart/DW-Pose (MUTE) → ControlNetLoader (MUTE) → ControlNetApplyAdvanced (**BYPASS**) → KSampler | структурно PASS; базовая генерация работает при выключенной ветке |
 | `voxel_style_prompt_v1.json` | — | style_prefix, character_block (10 полей), negative, style_lock_invariants, style_variables, дефолты генерации/IPAdapter | единый источник стиля |

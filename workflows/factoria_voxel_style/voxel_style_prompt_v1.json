@@ -42,14 +42,15 @@
   "generation_defaults": {
     "checkpoint": "v1-5-pruned-emaonly-fp16.safetensors",
     "width": 512,
-    "height": 768,
+    "height": 512,
     "batch_size": 1,
     "steps": 28,
     "cfg": 7.0,
     "sampler_name": "dpmpp_2m",
     "scheduler": "karras",
     "denoise": 1.0,
-    "seed": 123456789
+    "seed": 123456789,
+    "note": "512x512 batch 1 = native SD1.5 '512-class' per COMFY-STYLE-02. Portrait 512x768 can be tried only after the first memory measurement."
   },
   "ipadapter_reference": {
     "mode": "style, not identity",

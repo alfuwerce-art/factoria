@@ -4,9 +4,11 @@
       "status": "PASS",
       "prompt_nodes": 7,
       "outputs": [
-        "8"
+        "9"
       ],
-      "notes": [],
+      "notes": [
+        "muted (not queued): LoraLoader#6"
+      ],
       "error": null,
       "node_errors": null
     },

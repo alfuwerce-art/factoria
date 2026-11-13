@@ -4,8 +4,8 @@
   "workflows": {
     "FACTORIA_VOXEL_STYLE_BASE.json": {
       "status": "PASS",
-      "nodes": 8,
-      "links": 9,
+      "nodes": 9,
+      "links": 11,
       "problems": [],
       "warnings": []
     },

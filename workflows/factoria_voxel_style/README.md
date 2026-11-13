@@ -5,10 +5,13 @@
 
 | Файл | Что делает | Нужны веса |
 |---|---|---|
-| `FACTORIA_VOXEL_STYLE_BASE.json` | базовая генерация SD1.5, без IPAdapter и ControlNet | только checkpoint `v1-5-pruned-emaonly-fp16.safetensors` |
+| `FACTORIA_VOXEL_STYLE_BASE.json` | базовая генерация SD1.5 512×512 batch 1, без IPAdapter и ControlNet (muted-заготовка `LoraLoader` для будущей style-LoRA) | только checkpoint `v1-5-pruned-emaonly-fp16.safetensors` |
 | `FACTORIA_VOXEL_STYLE_IPADAPTER.json` | style reference (voxel-язык) через IPAdapter | + CLIP Vision + `ip-adapter-plus_sd15` |
 | `FACTORIA_VOXEL_STYLE_CONTROL_TEMPLATE.json` | то же + отключаемая ветка ControlNet | + веса ControlNet (ветка в BYPASS) |
 | `voxel_style_prompt_v1.json` | контракт стиля: префикс, блок персонажа, negative | — |
+
+Портрет 512×768 можно попробовать **после** первого замера памяти: лимит этапа — RAM ≤ 15 GB и
+дополнительная VRAM ≤ 2 GB, менять разрешение до замера нельзя.
 
 ## Запуск
 

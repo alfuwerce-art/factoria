@@ -322,15 +322,19 @@ def build_graphs(cfg: dict, oi: dict):
     neg_n = g.add("CLIPTextEncode", {"text": negative_text}, pos=(0, 540), title="NEGATIVE")
     lat_n = g.add("EmptyLatentImage", {"width": gd["width"], "height": gd["height"],
                                        "batch_size": gd["batch_size"]}, pos=(0, 840))
+    lora_n = g.add("LoraLoader", {"lora_name": "", "strength_model": 1.0, "strength_clip": 1.0},
+                   pos=(0, 1020), mode=2, title="LoRA (muted - not trained yet)")
     ks_n = g.add("KSampler", {"seed": gd["seed"], "control_after_generate": "fixed",
                               "steps": gd["steps"], "cfg": gd["cfg"],
                               "sampler_name": gd["sampler_name"], "scheduler": gd["scheduler"],
-                              "denoise": gd["denoise"]}, pos=(480, 240), title="KSampler (box 512-class, batch 1)")
+                              "denoise": gd["denoise"]}, pos=(480, 240), title="KSampler (512-class, batch 1)")
     vd_n = g.add("VAEDecode", pos=(830, 240))
     save_n = g.add("SaveImage", {"filename_prefix": "factoria/voxel_style_base"}, pos=(1100, 240))
     g.connect(ckpt_n, 1, pos_n, "clip")
     g.connect(ckpt_n, 1, neg_n, "clip")
     g.connect(ckpt_n, 0, ks_n, "model")
+    g.connect(ckpt_n, 0, lora_n, "model")
+    g.connect(ckpt_n, 1, lora_n, "clip")
     g.connect(pos_n, 0, ks_n, "positive")
     g.connect(neg_n, 0, ks_n, "negative")
     g.connect(lat_n, 0, ks_n, "latent_image")

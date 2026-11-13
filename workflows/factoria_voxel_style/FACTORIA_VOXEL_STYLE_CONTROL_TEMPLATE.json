@@ -613,12 +613,12 @@
       },
       "widgets_values": [
         512,
-        768,
+        512,
         1
       ],
       "widgets_values_named": {
         "width": 512,
-        "height": 768,
+        "height": 512,
         "batch_size": 1
       }
     },

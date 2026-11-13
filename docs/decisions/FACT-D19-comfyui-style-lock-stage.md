@@ -1,56 +1,45 @@
-# FACT-D19 — ComfyUI как этап фиксации VOXEL_STYLE (SD1.5, style lock)
+# FACT-D19 — ComfyUI stage: style lock before 3D generation
 
-**Дата:** 2026-11-13
-**Статус:** утверждено владельцем (текст ТЗ COMFY-STYLE-02/03, сессия 2026-11-13)
-**Связанные документы:** `docs/tasks/COMFY-STYLE-02_INSTALL_AND_CONFIGURE.md`,
-`docs/tasks/COMFY-STYLE-03_VOXEL_STYLE_WORKFLOW.md`, `docs/tasks/COMFY-STYLE-02_03_RUN_REPORT.md`
+**Decision date:** 2026-11-13  
+**Status:** APPROVED / CURRENT DIRECTION  
+**Project:** Factoria
 
-## Контекст
+## Goal
 
-Прототип Orc (`ORC-02R`) доведён до состояния «модель ждёт визуальной приёмки», но
-художественный язык CubeGame/Factoria не описан как воспроизводимый контракт.
-Следующий шаг — не новая 3D-модель, а **фиксация стиля concept-изображений**:
-один и тот же voxel/cuboid язык должен сохраняться при смене персонажа.
+Pause further ORC-02R geometry iteration. The next active experiment is to **lock the visual style of characters in ComfyUI** before continuing image→3D work.
 
-## Решение
+This stage does **not** judge a final game model. Its goal is to prove that one controlled ComfyUI workflow can repeatedly produce characters in the same approved voxel/cuboid visual language.
 
-1. **Инструмент:** уже установленный portable ComfyUI `D:\programs\ComfyUI\` (0.45.0).
-   Второй экземпляр не ставится. Глобальные Python/PATH/CUDA/драйвер не меняются.
-2. **Модель:** только `Stable Diffusion 1.5 fp16 ema-only`
-   (`v1-5-pruned-emaonly-fp16.safetensors`, CreativeML OpenRAIL-M). Без SDXL/FLUX/Qwen,
-   без наборов LoRA.
-3. **Механика фиксации стиля — в этом порядке:**
-   - **жёсткий текстовый стилевой контракт** (`voxel_style_prompt_v1.json`): неизменяемый
-     `style_prefix` + отдельный изменяемый блок персонажа + обязательный negative;
-   - **IPAdapter (style transfer)** по локальному reference image — переносит визуальный
-     язык (иерархия блоков, детализация лица, жёсткие формы, подача), **не** личность
-     персонажа; reference не публикуется;
-   - **ControlNet** — только как опциональная отключаемая ветка (силуэт/поза/глубина).
-4. **LoRA не обучается** на этом этапе: ни датасета, ни тренировочных фреймворков.
-   Обучение `Factoria Style LoRA` — только если доказано, что prompt + IPAdapter плохо
-   держат стиль между персонажами.
-5. **Бюджет ресурсов (жёсткий лимит этапа):** RAM ≤ 15 GB, дополнительная VRAM ≤ 2 GB
-   сверх baseline до запуска. Два режима запуска:
-   - `SAFE_BASELINE` — `--novram --reserve-vram 5` (минимум VRAM);
-   - `CPU_FALLBACK` — `--cpu` (0 MB инференса на GPU).
-6. **Приёмка этапа:** владелец открывает готовый workflow, выбирает reference, вводит
-   character prompt, нажимает Queue и видит реальный расход RAM/VRAM (Crystools).
-   Первая художественная генерация и замер пиков — за владельцем, не за исполнителем.
+## Resource cap
 
-## Границы
+Hard owner limit for the entire AI image-generation task:
+- RAM <= 15 GB peak;
+- additional VRAM <= 2 GB peak above baseline;
+- include model weights, VAE/text encoder, intermediate tensors and runtime overhead.
 
-- На этом этапе НЕ делаются: финальная 3D-модель, TripoSR, Blender geometry, rig,
-  animation, emotions, Unity, batch generation, десятки расширений, тяжёлые веса
-  «на всякий случай».
-- Веса IPAdapter/ControlNet не скачиваются автоматически: сначала список (источник,
-  размер, лицензия, память), потом отдельное согласование.
-- Публичный репозиторий не содержит весов, reference-изображений владельца и outputs.
+Because normal GPU-resident image models usually exceed +2 GB VRAM, the first benchmark must use ComfyUI `--novram` or `--cpu`/CPU-offload style execution and measure real peaks. Do not assume a model fits from file size alone.
 
-## Последствия
+## First benchmark
 
-- Стиль становится воспроизводимым артефактом (prompt contract + workflow), а не
-  «картинкой в чате»; сравнение персонажей идёт по неизменяемым признакам.
-- Появляется измеренная база RAM/VRAM для RTX 4060 Laptop 8 GB, на которую опираются
-  следующие AI-шаги (image-to-3D, motion).
-- Следующий шаг после приёмки: первая генерация + замер пиков; при провале стиля —
-  решение про style LoRA отдельным ТЗ.
+Start with the lightest practical Stable Diffusion 1.x-class checkpoint/workflow at batch=1 and native low resolution (e.g. 512-class). No SDXL/FLUX/Qwen image workflow until measured evidence shows both caps can be respected.
+
+Measure:
+- baseline RAM/VRAM before ComfyUI;
+- idle after model load;
+- peak during text encoding;
+- peak during sampling;
+- peak during VAE decode;
+- wall time/image.
+
+If RAM >15 GB or additional VRAM >2 GB, stop and mark the configuration REJECTED.
+
+## Style-lock output
+
+Once a configuration fits:
+1. Use the approved Orc visual reference and written style constraints.
+2. Generate multiple Orc concepts while keeping the same style.
+3. Change identity/details while preserving the style.
+4. Select an approved style recipe/workflow.
+5. Only after style lock, test the approved image through an image-to-3D tool such as TripoSR.
+
+No rigging, animation, emotion system, Unity integration or mass production in this stage.
