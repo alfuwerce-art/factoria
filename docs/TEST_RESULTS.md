@@ -403,6 +403,61 @@ workflow на канвасе в браузере (проверена струк�
 
 ---
 
+## COMFY-STYLE-04B — Civitai «Voxel Style [SDXL]» + Voxel Face Style Lock
+
+```yaml
+id: COMFY-STYLE-04B
+status: READY_FOR_OWNER_TEST     # LoRA установлена, SHA-256 совпал, ComfyUI её видит,
+                                 # 3 новых workflow прошли серверную валидацию;
+                                 # генерация НЕ проверена (SDXL-чекпоинт ещё качается)
+machine: WINDOWS_11
+software: ComfyUI 0.45.0 + Civitai LoRA ral-vxl (SDXL) + DreamShaper XL Turbo workflows
+version: LoRA Civitai model 461862 / version 513975 (author RalFinger)
+source_url: https://civitai.com/api/download/models/513975  (metadata: https://civitai.com/api/v1/models/461862)
+license: allowCommercialUse=RentCivit, allowDerivatives=False, allowNoCredit=False -> LICENSE_BLOCKED_FOR_PRODUCTION
+install_location: D:\programs\ComfyUI\ComfyUI\models\loras\ral-vxl.safetensors
+download_size: 228 453 420 B
+download_sha256: 9dc480ee98c12a499bee1fc19ee0e13969a3c6b14be0e6ec133a11d563e83a25
+sha256_verified: YES (совпал с хэшем, опубликованным Civitai для файла)
+sample_asset: workflows DREAMSHAPER_XL_CIVITAI_VOXEL{,_HUMAN,_ELF}.json + prompt_voxel_face_lock_v1.json
+command: |
+  # загрузка (отдельный экземпляр, не конфликтует с fetch_style04_models.ps1)
+  powershell -NoProfile -ExecutionPolicy Bypass -File scripts\comfyui\fetch_checkpoint_parallel.ps1 `
+      -Url https://civitai.com/api/download/models/513975 `
+      -Target D:\programs\ComfyUI\ComfyUI\models\loras\ral-vxl.safetensors `
+      -ExpectedSha256 9dc480ee...a25 -TotalBytes 228453420 -Connections 6
+  # сборка workflow + проверка
+  python_embeded\python.exe -s scripts\comfyui\build_civitai_voxel_workflows.py ...
+  python_embeded\python.exe -s scripts\comfyui\validate_factoria_workflows.py ... --substitute-ckpt v1-5-pruned-emaonly-fp16.safetensors
+output: workflows\dreamshaper_xl\DREAMSHAPER_XL_CIVITAI_VOXEL.json (+_HUMAN,_ELF), prompt_voxel_face_lock_v1.json, measurements\civitai_voxel_build_report.json, measurements\dreamshaper_xl_validation.json
+checks:
+  - name: Метаданные Civitai (версия/тип/размер/trigger/лицензия)
+    result: PASS  (LORA, version 513975, baseModel SDXL 1.0, trigger ral-vxl, 228 453 420 B)
+  - name: Загрузка + SHA-256
+    result: PASS  (228 453 420 B; sha256 9dc480ee…a25 совпал)
+  - name: Структура LoRA
+    result: PASS  (2958 тензоров: 2166 UNet + 792 TE1, kohya-формат с alpha)
+  - name: ComfyUI видит LoRA
+    result: PASS  (LoraLoader.lora_name = ["ral-vxl.safetensors"])
+  - name: Серверная валидация новых workflow
+    result: PASS  (CIVITAI_VOXEL / _HUMAN / _ELF: 8 нод в prompt, output SaveImage; with --substitute-ckpt)
+  - name: Fictiverse Voxel XL сохранён
+    result: PASS  (не заменялся; его workflow ждёт свои веса)
+  - name: Совместимость с SDXL Turbo (реальный прогон)
+    result: NOT_TESTED  (чекпоинт DreamShaper XL ещё докачивается)
+  - name: Художественная приёмка лиц/рас
+    result: NOT_TESTED  (владелец)
+issues:
+  - лицензия требует разрешения автора для коммерческого использования и запрещает производные (FACT-D21)
+  - turbo (CFG 2) ослабляет влияние LoRA — сила 0.6 выбрана компромиссно, серия 0.4/0.8 для проверки
+  - BODY_STYLE_LOCK / FACE_STYLE_LOCK — только текстовые блоки; региональное управление и inpaint-корректор не реализованы
+next_action: >
+  После загрузки DreamShaper XL: запустить DREAMSHAPER_XL_CIVITAI_VOXEL.json (seed 424242, LoRA 0.6),
+  затем 0.4/0.8 и расовые варианты; сравнить единство стиля и читаемость лиц при уменьшении до ~256 px.
+```
+
+---
+
 ## COMFY-STYLE-04 — DreamShaper XL + Pixel-Textured 3D
 
 ```yaml

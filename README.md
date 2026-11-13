@@ -29,6 +29,7 @@
 | SD 1.5 checkpoint | `v1-5-pruned-emaonly-fp16.safetensors` (2.03 ГБ, CreativeML OpenRAIL-M) — единственный чекпоинт; веса IPAdapter/ControlNet **не скачаны** (список в отчёте) |
 | FACTORIA VOXEL_STYLE | 3 готовых workflow + prompt-контракт → `workflows/factoria_voxel_style/`; запуск `scripts/comfyui/launch_safe_baseline.bat` |
 | DREAMSHAPER XL (эксперимент) | SDXL DreamShaper XL Turbo v2.1 + VoxelXL LoRA + SDXL IPAdapter + union ControlNet → `workflows/dreamshaper_xl/`; запуск `scripts/comfyui/launch_dreamshaper_xl.bat`; **веса докачиваются**, стиль не утверждён |
+| Civitai Voxel Style [SDXL] (эксперимент, лицензия ограничена) | `ral-vxl` LoRA + расовые workflow орк/человек/эльф → `workflows/dreamshaper_xl/DREAMSHAPER_XL_CIVITAI_VOXEL*.json`; BODY/FACE style lock в `prompt_voxel_face_lock_v1.json`; **коммерческое использование не разрешено автором** (FACT-D21) |
 | Git / remote | `origin` = `alfuwerce-art/factoria.git`; рабочая ветка `factory/work`; `main` не изменяется исполнителем |
 | Режим DSH | **CubeGame Factory** (`cubegame-factory`) — выбирается при создании нового чата |
 

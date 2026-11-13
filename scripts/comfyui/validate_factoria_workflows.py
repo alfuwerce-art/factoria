@@ -35,6 +35,9 @@ def parse_args():
     ap.add_argument("--comfy", required=True, help="ComfyUI source dir containing nodes.py/execution.py")
     ap.add_argument("--workflow-dir", required=True)
     ap.add_argument("--report", required=True)
+    ap.add_argument("--substitute-ckpt", default=None,
+                    help="validate with this checkpoint name instead of the one stored in the graph "
+                         "(used while the intended checkpoint is still downloading)")
     return ap.parse_args()
 
 
@@ -88,7 +91,8 @@ def main() -> int:
     args.workflow_dir = os.path.abspath(args.workflow_dir)
     args.comfy = os.path.abspath(args.comfy)
     workflow_files = sorted(f for f in os.listdir(args.workflow_dir)
-                            if f.startswith("FACTORIA_") and f.endswith(".json"))
+                            if (f.startswith("FACTORIA_") or f.startswith("DREAMSHAPER_"))
+                            and f.endswith(".json"))
     if not workflow_files:
         print("no workflows found")
         return 2
@@ -109,9 +113,17 @@ def main() -> int:
     asyncio.run(nodes.init_extra_nodes())
     sys.argv = argv_backup
 
-    report = {"workflows": {}}
+    report = {"workflows": {}, "ckpt_substituted": args.substitute_ckpt}
     rc = 0
     for fname, wf in loaded.items():
+        if args.substitute_ckpt:
+            # Structural validation only: the intended checkpoint is still downloading.
+            for n in wf["nodes"]:
+                if n.get("type") == "CheckpointLoaderSimple":
+                    named = n.setdefault("widgets_values_named", {})
+                    named["ckpt_name"] = args.substitute_ckpt
+                    if n.get("widgets_values"):
+                        n["widgets_values"][0] = args.substitute_ckpt
         prompt, notes = ui_to_api(wf)
         valid, error, outputs, node_errors = asyncio.run(
             execution.validate_prompt("factoria-validate", prompt, None))

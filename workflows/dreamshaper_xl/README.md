@@ -12,7 +12,28 @@
 | `DREAMSHAPER_XL_PIXEL_STYLE.json` | + LoRA `VoxelXL_v1.safetensors` (триггер **voxel style**) | + LoRA |
 | `DREAMSHAPER_XL_REFERENCE_LOCK.json` | + SDXL IPAdapter по локальному референсу | + `ip-adapter-plus_sdxl_vit-h` + CLIP ViT-H + референс в `input/` |
 | `DREAMSHAPER_XL_POSE_CONTROL.json` | + отключаемая ветка ControlNet (union: canny / lineart / dwpose) | + `controlnet-union-sdxl-1.0` |
+| `DREAMSHAPER_XL_CIVITAI_VOXEL.json` | **орк**, Civitai LoRA `ral-vxl` (trigger `ral-vxl`, strength 0.6) | + `ral-vxl.safetensors` |
+| `DREAMSHAPER_XL_CIVITAI_VOXEL_HUMAN.json` / `..._ELF.json` | сравнительные тесты рас (тот же стиль-блок, меняется только раса) | + `ral-vxl.safetensors` |
 | `prompt_orc_v1.json` | контракт: positive/negative под первый Orc-тест, настройки, лимиты | — |
+| `prompt_voxel_face_lock_v1.json` | BODY_STYLE_LOCK + FACE_STYLE_LOCK, расовые блоки, negative, сравнительный тест | — |
+
+### Civitai «Voxel Style [SDXL]» — важное ограничение
+
+Файл `ral-vxl.safetensors` (Civitai 461862, автор RalFinger) установлен **только для эксперимента**:
+`allowCommercialUse=RentCivit`, `allowDerivatives=False`, `allowNoCredit=False` — коммерческое
+использование изображений автором не разрешено, производные запрещены. Поэтому:
+- основная стилевая LoRA остаётся **Fictiverse Voxel XL** (openrail);
+- результаты на `ral-vxl` нельзя переносить в релиз без письменного разрешения автора;
+- производственная альтернатива — SDXL IPAdapter по собственному референсу или собственная
+  `Factoria Style LoRA` на собственных/лицензированных изображениях.
+Подробнее: `docs/decisions/FACT-D21-civitai-voxel-lora-license.md`.
+
+### Voxel Face Style Lock
+
+`BODY_STYLE_LOCK` и `FACE_STYLE_LOCK` — это **два блока одного промпта**, а не независимое
+управление стилями (пока архитектурное требование). Сравнительный тест: орк → человек → эльф на
+одном seed и одной силе LoRA; критерий — единый воксельный язык, читаемые расовые особенности,
+взрослые пропорции лица, разделённые конечности, полный рост.
 
 ## Запуск
 

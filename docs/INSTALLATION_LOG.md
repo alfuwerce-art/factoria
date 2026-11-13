@@ -83,6 +83,19 @@ numpy 2.5.4, transformers 5.21.0 зафиксированы, чтобы ноды
 HF на этой машине отдаёт ~0.9–1.0 МБ/с максимум на 12 соединениях (одиночный поток падает до 20–60 КБ/с).
 **SD 1.5 checkpoint не тронут** (`v1-5-pruned-emaonly-fp16.safetensors` остаётся в `models\checkpoints\`).
 
+### COMFY-STYLE-04B — Civitai «Voxel Style [SDXL]» LoRA (2026-11-13)
+
+| # | Файл | Куда | Размер | SHA-256 | Лицензия / условия | Статус |
+|---|---|---|---|---|---|---|
+| 16 | `ral-vxl.safetensors` (Voxel Style [SDXL], Civitai 461862 / version 513975, RalFinger, trigger `ral-vxl`) | `models\loras\` | 228 453 420 B | `9dc480ee98c12a499bee1fc19ee0e13969a3c6b14be0e6ec133a11d563e83a25` | **allowCommercialUse=RentCivit, allowDerivatives=False, allowNoCredit=False** → `LICENSE_BLOCKED_FOR_PRODUCTION` | см. отчёт `docs/tasks/COMFY-STYLE-04B_RUN_REPORT.md` |
+
+Метаданные получены через `https://civitai.com/api/v1/models/461862` (read-only, без авторизации);
+скачивание — `https://civitai.com/api/download/models/513975` (307 → подписанный b2.civitai.com URL),
+размер подтверждён `Content-Range: bytes 0-0/228453420`. Загрузка отдельным экземпляром
+`fetch_checkpoint_parallel.ps1` (6 диапазонов, перезапускаемая) — параллельно с DreamShaper XL,
+с приоритетом последнего. **Fictiverse Voxel XL не заменялся.**
+
+
 
 
 **Проверка целостности загрузки:**
