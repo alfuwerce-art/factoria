@@ -54,3 +54,10 @@ outputs/prototypes/orc_02/**/*.glb
 outputs/prototypes/orc_02/**/*.blend
 outputs/prototypes/orc_02/**/*.blend1
 outputs/prototypes/orc_02/**/*.png
+
+# ORC-02R: меши и рендеры новой модели публикуются отдельным решением;
+# в git идут только код, измерения (числа), descriptor/validation/report (метаданные)
+outputs/prototypes/orc_02r/**/*.glb
+outputs/prototypes/orc_02r/**/*.blend
+outputs/prototypes/orc_02r/**/*.blend1
+outputs/prototypes/orc_02r/**/*.png

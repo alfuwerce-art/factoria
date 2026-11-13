@@ -287,3 +287,61 @@ next_action: >
 пригодность для стиля CubeGame. Успешный API-прогон — это только «сервер и конвейер запускаются».
 
 ---
+
+## ORC-02R — процедурная генерация НОВОЙ модели Orc (2026-11-13)
+
+```yaml
+id: ORC-02R
+status: MODEL_PENDING_REVIEW   # технический PASS, визуальной приёмки владельцем нет
+machine: WINDOWS_11
+software: HumanoidBase v2 (Python stdlib) + Blender 5.2.4 headless
+version: scripts/orc02r + profiles/orc.json (seed 20261113, voxel 0.03 м)
+source_url: локальный read-only источник CubeGame (measurements/orc_reference.json, только числа)
+license: собственный процедурный код; источник CubeGame — только измерительный референс
+install_location: D:\Projects\CubeGame Factory\scripts\orc02r
+sample_asset: новая модель Orc (20 модулей, 10 894 вокселя, 868 кубоидов)
+command: >
+  python scripts\orc02r\run_orc02r.py --reference measurements\orc_reference.json
+  --profile scripts\orc02r\profiles\orc.json --out outputs\prototypes\orc_02r\run1
+input: measurements\orc_reference.json + scripts\orc02r\profiles\orc.json
+output: outputs\prototypes\orc_02r\run1\{orc_new.glb, descriptor.json, validation.json, report.json, blender\*}
+checks:
+  - name: Одна команда без ручных кликов
+    result: PASS  (91.08 с всего: генерация 0.2 с, Blender 90.0 с)
+  - name: SOURCE_GEOMETRY_REUSED
+    result: NO  (генератор читает только числа; запуск при недоступном источнике даёт тот же GLB b984a73b…)
+  - name: Детерминизм
+    result: PASS  (два независимых прогона → одинаковый SHA-256 GLB)
+  - name: Профиль влияет на геометрию
+    result: PASS  (chest_width 19 / jaw_width 12 / pauldron RIGHT → другой GLB, +27 кубоидов)
+  - name: Blender: импорт/целостность
+    result: PASS  (20 модулей, 6944 вершины, 10 416 треугольников, 0 вырожденных, 0 NaN)
+  - name: Blender: оси/масштаб
+    result: PASS  (0.78 × 0.48 × 2.04 м, низ на z = 0)
+  - name: Независимое редактирование модулей
+    result: PASS  (сдвиг forearm_L 0.1 м не двигает остальные)
+  - name: Стыки без пересечений
+    result: PASS  (0 пересечений; открытые LEGO-зазоры 1 воксель)
+  - name: .blend сохранён и открыт заново
+    result: PASS  (170 283 Б, 20 объектов)
+  - name: GLB round-trip
+    result: PASS  (имена/позиции/треугольники/материал/габариты совпадают)
+  - name: 3 вида (front/side/3-4)
+    result: PASS  (Cycles CPU, 900×1300)
+issues:
+  - в источнике нет геометрии конечностей и rest-позы: длины сегментов выведены от роста (DERIVED_FROM_MEASURED)
+  - голова источника ~= торс («блоб»); для читаемого не-мультяшного силуэта уменьшена (рост сохранён, +3.9 %)
+  - лицо ограничено сеткой 0.03 м: глаз 2×1 воксель, клык 1 воксель
+  - плоские участки (грудь/бёдра) и наплечник читаются как «плиты» — художественная доводка после решения владельца
+next_action: >
+  Визуальная приёмка владельцем трёх ракурсов: MODEL_APPROVED (к риг-контракту) или MODEL_REWORK
+  (список правок → повторный прогон одной командой). Риг/анимации/эмоции не начаты по условиям задачи.
+```
+
+**Карточка памяти (RAM/VRAM):** пик RAM процесса Blender **1277 МБ**, пик pagefile **1485 МБ**,
+прирост VRAM всей карты **+96 МБ** (рендер Cycles CPU), RAM/VRAM под AI не использовались —
+в конвейере нет AI-моделей.
+
+**Чего этот тест НЕ доказывает:** пригодность модели в Unity, качество рига/анимации
+(их нет по условиям задачи), «PRODUCTION_READY» и художественную приёмку.
+

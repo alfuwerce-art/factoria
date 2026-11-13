@@ -1,0 +1,12 @@
+﻿ORC-02R: доказательство, что генерация не читает геометрию источника
+
+1) grep по генератору (нет чтения .cubdec / путей CubeGame):
+generate_orc.py:5: Выход: новый GLB + descriptor.json. Геометрия CubeGame здесь не читается и не
+generate_orc.py:226: "source_geometry_note": "источник CubeGame читает только measure_reference.py; "
+humanoid_base.py:13: Все числа — из профиля (JSON). Геометрия CubeGame не используется.
+voxelkit.py:4: Используется новым процедурным генератором (ORC-02R). Никаких данных CubeGame
+
+2) генерация при CUBEGAME_ALPHA_CONTENT=D:\nonexistent_path_for_proof (источник недоступен):
+GENERATE_OK {"glb": "outputs\\prototypes\\orc_02r\\_proof_nosource\\orc_new.glb", "bytes": 250092, "sha256": "b984a73bb8e2827cafc99f85cabb573f7d68c0a4cdb814c805e5ce7623895f66", "modules": 20, "voxels": 10894, "boxes": 868, "height_m": 2.04, "reference_height_m": 1.8479, "overlaps_trimmed": 0}
+
+3) вывод: SHA-256 совпадает с основным прогоном run1 (b984a73bb8e2827cafc99f85cabb573f7d68c0a4cdb814c805e5ce7623895f66) — генератор не обращается к источнику.

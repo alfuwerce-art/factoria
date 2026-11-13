@@ -1,0 +1,122 @@
+{
+  "artifacts": {
+    "blend": "D:\\Projects\\CubeGame Factory\\outputs\\prototypes\\orc_02r\\run1\\blender\\orc_new.blend",
+    "descriptor": "D:\\Projects\\CubeGame Factory\\outputs\\prototypes\\orc_02r\\run1\\descriptor.json",
+    "glb": "D:\\Projects\\CubeGame Factory\\outputs\\prototypes\\orc_02r\\run1\\orc_new.glb",
+    "renders": [
+      "D:\\Projects\\CubeGame Factory\\outputs\\prototypes\\orc_02r\\run1\\blender\\orc_new_front.png",
+      "D:\\Projects\\CubeGame Factory\\outputs\\prototypes\\orc_02r\\run1\\blender\\orc_new_side.png",
+      "D:\\Projects\\CubeGame Factory\\outputs\\prototypes\\orc_02r\\run1\\blender\\orc_new_three_quarter.png"
+    ],
+    "roundtrip_glb": "D:\\Projects\\CubeGame Factory\\outputs\\prototypes\\orc_02r\\run1\\blender\\orc_new_roundtrip.glb",
+    "validation": "D:\\Projects\\CubeGame Factory\\outputs\\prototypes\\orc_02r\\run1\\validation.json"
+  },
+  "blockers": [],
+  "finished": "2026-11-13T17:51:33",
+  "numbers": {
+    "boxes": 868,
+    "determinism_glb_sha256": "b984a73bb8e2827cafc99f85cabb573f7d68c0a4cdb814c805e5ce7623895f66",
+    "joint_gaps_voxels": {
+      "foot_L->shin_L": 1,
+      "foot_R->shin_R": 1,
+      "forearm_L->upper_arm_L": 1,
+      "forearm_R->upper_arm_R": 1,
+      "hand_L->forearm_L": 0,
+      "hand_R->forearm_R": 0,
+      "pelvis->torso": 0,
+      "shin_L->thigh_L": 1,
+      "shin_R->thigh_R": 1,
+      "torso->head": 0
+    },
+    "levels": {
+      "LARGE": {
+        "boxes": 425,
+        "voxels": 6621
+      },
+      "MEDIUM": {
+        "boxes": 336,
+        "voxels": 3730
+      },
+      "SMALL": {
+        "boxes": 107,
+        "voxels": 543
+      }
+    },
+    "main_glb_sha256": "b984a73bb8e2827cafc99f85cabb573f7d68c0a4cdb814c805e5ce7623895f66",
+    "modules": 20,
+    "reference_check": {
+      "deviation_percent": 3.9,
+      "generated_anatomical_height_m": 1.92,
+      "generated_total_height_with_hair_m": 2.04,
+      "note": "рост (по макушке черепа) сверяется с референсом; силуэтные ширины профиля подобраны так, чтобы орк читался без 'блоб-головы' источника",
+      "reference_head_m": {
+        "clip_scale": 0.9,
+        "depth_m": 1.17,
+        "height_m": 0.9193,
+        "width_m": 1.5043
+      },
+      "reference_torso_m": {
+        "depth_m": 0.7429,
+        "height_m": 0.9286,
+        "width_m": 0.9286
+      },
+      "reference_total_height_m": 1.8479
+    },
+    "variation_glb_sha256": "f9912f84b890f47650b3373fc3d43edd9322dacbf7feb8cff3ba9a409fb62c18",
+    "voxels": 10894
+  },
+  "resources": {
+    "blender_pagefile_peak_mb": 1485.5,
+    "blender_ram_peak_mb": 1277.3,
+    "blender_seconds": 90.04,
+    "generator_seconds": 0.2,
+    "vram_delta_mb": 96
+  },
+  "result": "PASS",
+  "stages": {
+    "blender": {
+      "detail": "exit=0, result=PASS, 90.04s, пик RAM 1277 МБ",
+      "ok": true,
+      "ram_peak_mb": 1277.3,
+      "seconds": 90.04,
+      "stages": {
+        "axes_scale": true,
+        "blend_reopen": true,
+        "geometry_integrity": true,
+        "glb_roundtrip": true,
+        "import": true,
+        "independent_editing": true,
+        "joint_gaps": true,
+        "materials_colors": true,
+        "save_blend": true,
+        "three_views": true
+      },
+      "vram_delta_mb": 96
+    },
+    "determinism": {
+      "detail": "sha256 run1=b984a73bb8e2 run2=b984a73bb8e2",
+      "identical": true,
+      "ok": true,
+      "seconds": 0.28
+    },
+    "generate_new_geometry": {
+      "detail": "10894 вокселей, 868 кубоидов, 250092 байт GLB",
+      "ok": true,
+      "seconds": 0.2
+    },
+    "profile_variation": {
+      "detail": "изменение профиля даёт другой GLB (sha256 f9912f84b890), кубоидов 895 (+27)",
+      "different": true,
+      "ok": true,
+      "seconds": 0.37
+    },
+    "reference_measurement": {
+      "detail": "используется существующий measurements\\orc_reference.json",
+      "ok": true
+    }
+  },
+  "started": "2026-11-13T17:50:02",
+  "status": "MODEL_PENDING_REVIEW",
+  "task": "ORC-02R",
+  "wall_seconds": 91.08
+}
