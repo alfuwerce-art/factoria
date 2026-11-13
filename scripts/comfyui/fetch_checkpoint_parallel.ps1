@@ -1,104 +1,105 @@
-# FACTORIA / ComfyUI - resilient parallel download of large model files.
+# FACTORIA / ComfyUI - restartable parallel download of large model files.
 #
-# Why: huggingface.co throttles a single TCP connection on this host to ~60-100 KB/s,
-# while 4+ parallel range requests reach ~200 KB/s and more. The file is fetched as
-# independent byte ranges, each range retried, then appended to the target in order and
-# finally verified by SHA-256 - so a slow or broken connection cannot silently corrupt it.
+# Why: huggingface.co throttles a single TCP stream on this host to ~20-60 KB/s; 12 parallel
+# range requests reach ~0.9-1.0 MB/s. Because a 7 GB file then takes hours, the transfer must
+# survive restarts: every byte range is downloaded into "<target>.parts\part_<i>.bin" and the
+# parts directory is REUSED on the next run, so a re-run never re-downloads finished ranges.
+#
+# Ranges are deterministic: they are computed over the WHOLE file with a fixed chunk size
+# (ceil(total/Connections)), independent of what is already on disk. Only when every part is
+# complete is the target assembled (write to <target>.new, then replace) and verified by SHA-256.
 #
 # Usage:
-#   powershell -ExecutionPolicy Bypass -File scripts\comfyui\fetch_checkpoint_parallel.ps1 `
-#       -Url <hf resolve url> -Target <file> -ExpectedSha256 <hex> [-Connections 12] [-Resume]
+#   powershell -ExecutionPolicy Bypass -File fetch_checkpoint_parallel.ps1 `
+#       -Url <url> -Target <file> -ExpectedSha256 <hex> -TotalBytes <n> [-Connections 12]
 param(
     [Parameter(Mandatory = $true)][string]$Url,
     [Parameter(Mandatory = $true)][string]$Target,
     [Parameter(Mandatory = $true)][string]$ExpectedSha256,
+    [Parameter(Mandatory = $true)][int64]$TotalBytes,
     [int]$Connections = 12,
-    [int]$TotalBytes = 0,
-    [switch]$Resume,
-    [int]$MaxAttempts = 4
+    [int]$MaxRounds = 40,
+    [int]$MaxSeconds = 0
 )
 
 $ErrorActionPreference = 'Stop'
 $targetDir = Split-Path $Target -Parent
 New-Item -ItemType Directory -Force -Path $targetDir | Out-Null
+$partsDir = "$Target.parts"
+New-Item -ItemType Directory -Force -Path $partsDir | Out-Null
 
-if ($TotalBytes -le 0) {
-    $head = & curl.exe -sIL $Url 2>$null
-    $len = ($head | Select-String -Pattern '^content-length:\s*(\d+)' | Select-Object -Last 1)
-    if (-not $len) { throw "cannot determine content-length for $Url" }
-    $TotalBytes = [int64]$len.Matches[0].Groups[1].Value
-}
-"total_bytes=$TotalBytes connections=$Connections target=$Target"
-
-$have = 0
-if ($Resume -and (Test-Path $Target)) { $have = (Get-Item $Target).Length }
-"existing_bytes=$have"
-
-if ($have -eq $TotalBytes) {
-    "already_complete=true"
-} else {
-    $remaining = $TotalBytes - $have
-    $chunk = [int64][math]::Ceiling($remaining / $Connections)
-    $tmp = Join-Path $targetDir ('.parts_' + [guid]::NewGuid().ToString('N').Substring(0, 8))
-    New-Item -ItemType Directory -Force -Path $tmp | Out-Null
-    $parts = @()
-    for ($i = 0; $i -lt $Connections; $i++) {
-        $start = $have + $i * $chunk
-        if ($start -ge $TotalBytes) { break }
-        $end = [math]::Min($start + $chunk - 1, $TotalBytes - 1)
-        $parts += [pscustomobject]@{ Index = $i; Start = $start; End = $end; Path = (Join-Path $tmp "part_$i.bin") }
+# already finished?
+if ((Test-Path $Target) -and (Get-Item $Target).Length -eq $TotalBytes) {
+    $sha = (Get-FileHash -Path $Target -Algorithm SHA256).Hash.ToLower()
+    if ($sha -eq $ExpectedSha256.ToLower()) {
+        "already_complete=true sha256=$sha"
+        "SHA256_OK"
+        exit 0
     }
-    "parts=$($parts.Count) chunk_bytes=$chunk"
-
-    $sw = [Diagnostics.Stopwatch]::StartNew()
-    $pending = @($parts)
-    $round = 0
-    while ($pending.Count -gt 0) {
-        $round++
-        if ($round -gt $MaxAttempts) { throw "part download failed after $MaxAttempts rounds" }
-        # launch every outstanding range concurrently - this is where the speed comes from
-        $procs = @()
-        foreach ($p in $pending) {
-            $expected = $p.End - $p.Start + 1
-            if ((Test-Path $p.Path) -and (Get-Item $p.Path).Length -eq $expected) { continue }
-            $procs += Start-Process -FilePath 'curl.exe' -PassThru -WindowStyle Hidden -ArgumentList @(
-                '-L', '--fail', '--silent', '--show-error',
-                '--speed-limit', '2048', '--speed-time', '60', '--max-time', '1800',
-                '-r', "$($p.Start)-$($p.End)", '-o', $p.Path, $Url)
-        }
-        if ($procs.Count -eq 0) { break }
-        foreach ($pr in $procs) { $pr.WaitForExit() }
-        $pending = @($pending | Where-Object {
-                $exp = $_.End - $_.Start + 1
-                -not ((Test-Path $_.Path) -and (Get-Item $_.Path).Length -eq $exp)
-            })
-        $done = $parts.Count - $pending.Count
-        "round=$round done_parts=$done/$($parts.Count) elapsed_s=$([math]::Round($sw.Elapsed.TotalSeconds,0))"
-        if ($pending.Count -gt 0) { Start-Sleep -Seconds 2 }
-    }
-
-    # append in order into the target file
-    $fs = [System.IO.File]::Open($Target, [System.IO.FileMode]::Append, [System.IO.FileAccess]::Write)
-    try {
-        foreach ($p in $parts) {
-            $bytes = [System.IO.File]::ReadAllBytes($p.Path)
-            $fs.Write($bytes, 0, $bytes.Length)
-            $fs.Flush()
-            Remove-Item $p.Path -Force
-        }
-    } finally { $fs.Dispose() }
-    Remove-Item $tmp -Recurse -Force -ErrorAction SilentlyContinue
-    "download_elapsed_s=$([math]::Round($sw.Elapsed.TotalSeconds,0))"
+    "existing_target_sha_mismatch -> rebuilding from parts"
 }
 
-$final = (Get-Item $Target).Length
-"final_bytes=$final expected_bytes=$TotalBytes"
-if ($final -ne $TotalBytes) { "SIZE_MISMATCH"; exit 3 }
+$chunk = [int64][math]::Ceiling($TotalBytes / $Connections)
+"target=$Target"
+"total_bytes=$TotalBytes connections=$Connections chunk_bytes=$chunk parts_dir=$partsDir"
 
-$swHash = [Diagnostics.Stopwatch]::StartNew()
+$parts = @()
+for ($i = 0; $i -lt $Connections; $i++) {
+    $start = $i * $chunk
+    if ($start -ge $TotalBytes) { break }
+    $end = [math]::Min($start + $chunk - 1, $TotalBytes - 1)
+    $parts += [pscustomobject]@{
+        Index = $i; Start = $start; End = $end
+        Size  = $end - $start + 1
+        Path  = (Join-Path $partsDir "part_$i.bin")
+    }
+}
+
+$sw = [Diagnostics.Stopwatch]::StartNew()
+for ($round = 1; $round -le $MaxRounds; $round++) {
+    $pending = @($parts | Where-Object {
+            -not ((Test-Path $_.Path) -and ((Get-Item $_.Path).Length -eq $_.Size))
+        })
+    if ($pending.Count -eq 0) { "round=$round ALL_PARTS_COMPLETE"; break }
+    if ($MaxSeconds -gt 0 -and $sw.Elapsed.TotalSeconds -gt $MaxSeconds) { "TIME_LIMIT_REACHED"; exit 7 }
+    "round=$round pending_parts=$($pending.Count)/$($parts.Count) elapsed_s=$([math]::Round($sw.Elapsed.TotalSeconds,0))"
+    $procs = @()
+    foreach ($p in $pending) {
+        $procs += Start-Process -FilePath 'curl.exe' -PassThru -WindowStyle Hidden -ArgumentList @(
+            '-L', '--fail', '--silent', '--show-error',
+            '--speed-limit', '1024', '--speed-time', '60', '--max-time', '3600',
+            '-r', "$($p.Start)-$($p.End)", '-o', $p.Path, $Url)
+    }
+    foreach ($pr in $procs) { $pr.WaitForExit() }
+    $done = @($parts | Where-Object { (Test-Path $_.Path) -and ((Get-Item $_.Path).Length -eq $_.Size) }).Count
+    "round=$round complete_parts=$done/$($parts.Count) elapsed_s=$([math]::Round($sw.Elapsed.TotalSeconds,0))"
+}
+
+$missing = @($parts | Where-Object { -not ((Test-Path $_.Path) -and ((Get-Item $_.Path).Length -eq $_.Size)) })
+if ($missing.Count -gt 0) {
+    "INCOMPLETE parts=$($missing.Count) - run the same command again to continue"
+    exit 7
+}
+
+$tmp = "$Target.new"
+if (Test-Path $tmp) { Remove-Item $tmp -Force }
+$fs = [System.IO.File]::Open($tmp, [System.IO.FileMode]::Create, [System.IO.FileAccess]::Write)
+try {
+    foreach ($p in $parts) {
+        $bytes = [System.IO.File]::ReadAllBytes($p.Path)
+        $fs.Write($bytes, 0, $bytes.Length)
+    }
+} finally { $fs.Dispose() }
+
+if ((Get-Item $tmp).Length -ne $TotalBytes) {
+    "ASSEMBLED_SIZE_MISMATCH got=$((Get-Item $tmp).Length) expected=$TotalBytes"
+    exit 3
+}
+Move-Item -Path $tmp -Destination $Target -Force
+Remove-Item $partsDir -Recurse -Force -ErrorAction SilentlyContinue
+
 $sha = (Get-FileHash -Path $Target -Algorithm SHA256).Hash.ToLower()
 "sha256=$sha"
-"hash_seconds=$([math]::Round($swHash.Elapsed.TotalSeconds,1))"
 if ($sha -ne $ExpectedSha256.ToLower()) { "SHA256_MISMATCH expected=$($ExpectedSha256.ToLower())"; exit 4 }
 "SHA256_OK"
 exit 0

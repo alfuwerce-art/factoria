@@ -28,6 +28,7 @@
 | ComfyUI custom nodes | **Manager 4.2.2** (PyPI), **Crystools 1.27.4**, **IPAdapter_plus**, **controlnet_aux**, **rgthree-comfy** — установлены, импорт без ошибок |
 | SD 1.5 checkpoint | `v1-5-pruned-emaonly-fp16.safetensors` (2.03 ГБ, CreativeML OpenRAIL-M) — единственный чекпоинт; веса IPAdapter/ControlNet **не скачаны** (список в отчёте) |
 | FACTORIA VOXEL_STYLE | 3 готовых workflow + prompt-контракт → `workflows/factoria_voxel_style/`; запуск `scripts/comfyui/launch_safe_baseline.bat` |
+| DREAMSHAPER XL (эксперимент) | SDXL DreamShaper XL Turbo v2.1 + VoxelXL LoRA + SDXL IPAdapter + union ControlNet → `workflows/dreamshaper_xl/`; запуск `scripts/comfyui/launch_dreamshaper_xl.bat`; **веса докачиваются**, стиль не утверждён |
 | Git / remote | `origin` = `alfuwerce-art/factoria.git`; рабочая ветка `factory/work`; `main` не изменяется исполнителем |
 | Режим DSH | **CubeGame Factory** (`cubegame-factory`) — выбирается при создании нового чата |
 

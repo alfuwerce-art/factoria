@@ -37,6 +37,9 @@
 | F14 | rgthree-comfy в ComfyUI 0.45.0 (измерено 2026-11-13) | при перенаправлении stdout (файл/пайп) печать emoji роняет **весь сервер** `UnicodeEncodeError` на cp1251-консоли | в launcher'ах обязательны `PYTHONUTF8=1` и `PYTHONIOENCODING=utf-8`; не запускать ComfyUI с редиректом вывода без них |
 | F15 | ComfyUI UI-формат workflow | widget'ы хранятся **позиционно**; ручное редактирование JSON легко ломает параметры ноды | workflow собирать скриптом `build_factoria_voxel_workflows.py` из prompt-контракта и проверять `validate_factoria_workflows.py` |
 | F16 | IPAdapter style transfer | переносит и «личность» референса при большом weight; CLIP Vision ViT-H ≈ 2.5 ГБ | weight 0.75 + `style transfer` по умолчанию; при нехватке памяти — `ip-adapter_sd15_light` (44 МБ) |
+| F17 | ComfyUI + SDXL на 8 ГБ VRAM (COMFY-STYLE-04) | SDXL fp16 ≈ 6.9 ГБ весов: при `--reserve-vram 5` карте остаётся ~3 ГБ → постоянный offload; оптимальный режим **не определён** (пики не измерены) | измерить `xl_run_workflow.py` в двух режимах (`--reserve-vram 1` и `--novram --reserve-vram 5`), только потом объявлять режим |
+| F18 | SDXL Turbo-модель (DreamShaper XL Turbo) | требует 6–10 шагов и CFG 1.5–2.5; на CFG 2 LoRA работает слабее, детализация ниже, чем у классического DSXL | если владелец отвергнет турбо-качество — отдельная задача на классический DSXL (single-file только с Civitai, нужен токен) или на SDXL 1.0 base |
+| F19 | HuggingFace на этой машине | одиночный поток 20–60 КБ/с, 12 параллельных диапазонов ≈1 МБ/с → 13.7 ГБ весов ≈ 4 часа | загрузка сделана перезапускаемой (`<target>.parts`), не терять прогресс; не запускать два экземпляра одновременно |
 
 ---
 

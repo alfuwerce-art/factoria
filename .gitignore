@@ -64,3 +64,7 @@ outputs/prototypes/orc_02r/**/*.png
 # COMFY-STYLE: полный снимок /api/object_info генерируется заново с сервера (2.3 МБ),
 # в git идёт только урезанный контракт используемых нод
 measurements/comfyui_object_info_*_full.json
+
+# COMFY-STYLE-04: примеры авторов моделей (LoRA/чекпоинтов) — чужие изображения,
+# скачаны локально только для оценки стиля до установки; в публичный репозиторий не идут
+outputs/comfyui/style_samples/

@@ -63,6 +63,27 @@ numpy 2.5.4, transformers 5.21.0 зафиксированы, чтобы ноды
 | Загрузка (способ) | HF режет одиночный поток до 20–100 КБ/с → файл докачан параллельными диапазонами (`scripts\comfyui\fetch_checkpoint_parallel.ps1`) с проверкой размера каждой части |
 | Веса, которые **не** скачивались | IPAdapter (`ip-adapter-plus_sd15` 98 МБ), CLIP Vision ViT-H (2.5 ГБ), ControlNet v1.1 fp16 (3×0.69 GiB) — список с SHA-256 в `docs/tasks/COMFY-STYLE-02_03_RUN_REPORT.md` §6 |
 
+### COMFY-STYLE-04 — SDXL DreamShaper XL + Pixel-Textured 3D (2026-11-13, загрузка в процессе)
+
+Все файлы кладутся в **существующие** каталоги `D:\programs\ComfyUI\ComfyUI\models\*`.
+Источник SHA-256 — LFS-метаданные HuggingFace; скрипт `scripts\comfyui\fetch_style04_models.ps1`
+проверяет хэш по завершении каждого файла и продолжает с места после прерывания.
+
+| # | Файл | Куда | Размер | SHA-256 | Лицензия | Статус |
+|---|---|---|---|---|---|---|
+| 11 | `DreamShaperXL_Turbo_v2_1.safetensors` | `models\checkpoints\` | 6 939 220 250 B | `4496b36d…5083` | openrail++ (CreativeML OpenRAIL++-M) | загрузка идёт |
+| 12 | `VoxelXL_v1.safetensors` | `models\loras\` | 912 554 516 B | `7d9a5f11…8b5c` | openrail | в очереди |
+| 13 | `ip-adapter-plus_sdxl_vit-h.safetensors` | `models\ipadapter\` | 847 517 512 B | `3f5062b8…6581` | apache-2.0 | в очереди |
+| 14 | `CLIP-ViT-H-14-laion2B-s32B-b79K.safetensors` | `models\clip_vision\` | 2 528 373 448 B | `6ca9667d…b030` | open_clip/MIT (LAION-2B) | в очереди |
+| 15 | `controlnet-union-sdxl-1.0.safetensors` | `models\controlnet\` | 2 512 030 408 B | `a9e13fd6…7467` | apache-2.0 | в очереди |
+
+**Источники:** `Lykon/dreamshaper-xl-v2-turbo`, `Fictiverse/Voxel_XL_Lora`, `h94/IP-Adapter`
+(`sdxl_models/` и `models/image_encoder/`), `xinsir/controlnet-union-sdxl-1.0`.
+**Метод загрузки:** параллельные диапазоны с перезапускаемыми частями (`fetch_checkpoint_parallel.ps1`);
+HF на этой машине отдаёт ~0.9–1.0 МБ/с максимум на 12 соединениях (одиночный поток падает до 20–60 КБ/с).
+**SD 1.5 checkpoint не тронут** (`v1-5-pruned-emaonly-fp16.safetensors` остаётся в `models\checkpoints\`).
+
+
 
 **Проверка целостности загрузки:**
 

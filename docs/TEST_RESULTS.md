@@ -403,6 +403,76 @@ workflow на канвасе в браузере (проверена струк�
 
 ---
 
+## COMFY-STYLE-04 — DreamShaper XL + Pixel-Textured 3D
+
+```yaml
+id: COMFY-STYLE-04
+status: PARTIAL        # стек подготовлен, 4 workflow собраны и структурно проверены;
+                       # веса докачиваются, загрузка SDXL и пики RAM/VRAM НЕ проверены
+machine: WINDOWS_11
+software: ComfyUI 0.45.0 + SDXL DreamShaper XL Turbo v2.1 + VoxelXL LoRA + SDXL IPAdapter + union ControlNet
+version: ComfyUI 0.45.0; python 3.13.14 embedded; torch 2.14.1+cu130; CUDA 13.0
+source_url: |
+  checkpoint: https://huggingface.co/Lykon/dreamshaper-xl-v2-turbo/resolve/main/DreamShaperXL_Turbo_v2_1.safetensors
+  lora:       https://huggingface.co/Fictiverse/Voxel_XL_Lora/resolve/main/VoxelXL_v1.safetensors
+  ipadapter:  https://huggingface.co/h94/IP-Adapter/resolve/main/sdxl_models/ip-adapter-plus_sdxl_vit-h.safetensors
+  clipvision: https://huggingface.co/h94/IP-Adapter/resolve/main/models/image_encoder/model.safetensors
+  controlnet: https://huggingface.co/xinsir/controlnet-union-sdxl-1.0/resolve/main/diffusion_pytorch_model.safetensors
+license: openrail++ (checkpoint) / openrail (LoRA) / apache-2.0 (IPAdapter, ControlNet) / CLIP ViT-H MIT
+install_location: D:\programs\ComfyUI\ComfyUI\models\{checkpoints,loras,ipadapter,clip_vision,controlnet}
+download_sha256: |
+  checkpoint 4496b36d48bfd7cfe4e5dbce3485db567bcefa2bef7238d290dbd45612125083 (6 939 220 250 B)
+  lora       7d9a5f11e1b38d97f75d2b84bfb5bb3bf95cd0e5f2500b002d13374eb4f88b5c (912 554 516 B)
+  ipadapter  3f5062b8400c94b7159665b21ba5c62acdcd7682262743d7f2aefedef00e6581 (847 517 512 B)
+  clipvision 6ca9667da1ca9e0b0f75e46bb030f7e011f44f86cbfb8d5a36590fcd7507b030 (2 528 373 448 B)
+  controlnet a9e13fd61f3193887791c8a0dd07a07202174dc47d5ddaea94ea1344f07c7467 (2 512 030 408 B)
+sha256_verified: PENDING (загрузка идёт; скрипт проверяет SHA-256 по завершении каждого файла)
+sample_asset: workflow DREAMSHAPER_XL_* + prompt_orc_v1.json; генерации не выполнялось
+command: |
+  # загрузка (идемпотентная, продолжается с места после прерывания)
+  powershell -NoProfile -ExecutionPolicy Bypass -File scripts\comfyui\fetch_style04_models.ps1 -Connections 12
+  # запуск SDXL
+  scripts\comfyui\launch_dreamshaper_xl.bat          # --reserve-vram 1
+  scripts\comfyui\launch_dreamshaper_xl_novram.bat   # --novram --reserve-vram 5
+  # технический прогон + замер пиков (не художественная оценка)
+  python_embeded\python.exe -s scripts\comfyui\xl_run_workflow.py --url http://127.0.0.1:8188 `
+      --workflow workflows\dreamshaper_xl\DREAMSHAPER_XL_BASE.json --server-pid <pid> `
+      --out outputs\comfyui\style04_tech_test --report measurements\style04_technical_run.json
+output: workflows\dreamshaper_xl\{DREAMSHAPER_XL_BASE,DREAMSHAPER_XL_PIXEL_STYLE,DREAMSHAPER_XL_REFERENCE_LOCK,DREAMSHAPER_XL_POSE_CONTROL}.json, prompt_orc_v1.json, README.md; measurements\dreamshaper_xl_build_report.json
+checks:
+  - name: Вторая установка ComfyUI не создавалась; глобальные Python/CUDA/PATH не менялись
+    result: PASS
+  - name: SD 1.5 checkpoint и прежние workflow сохранены
+    result: PASS  (v1-5-pruned-emaonly-fp16.safetensors на месте; workflows/factoria_voxel_style/* не изменялись)
+  - name: 4 workflow собраны и структурно проверены против /api/object_info
+    result: PASS  (BASE 8/9, PIXEL_STYLE 9/11, REFERENCE_LOCK 11/13, POSE_CONTROL 14/16 нод/связей)
+  - name: Ноды LoRA/IPAdapter/ControlNet зарегистрированы
+    result: PASS  (в /object_info присутствуют все используемые типы)
+  - name: Целостность весов (SHA-256)
+    result: PENDING  (загрузка 13.7 ГБ при 0.4–1.0 МБ/с)
+  - name: Загрузка SDXL через torch/CUDA
+    result: NOT_TESTED  (не на чем: чекпоинт ещё качается)
+  - name: Пики RAM/VRAM и время генерации
+    result: NOT_TESTED  (на момент работ на машине работали ComfyUI владельца и Unity)
+  - name: Художественная оценка стиля
+    result: NOT_TESTED  (по ТЗ — только владелец)
+issues:
+  - HF на этой машине режет одиночный поток до 20–60 КБ/с; 12 параллельных диапазонов дают ~0.9–1.0 МБ/с
+  - SDXL fp16 ≈6.9 ГБ весов при 8 ГБ VRAM — режим запуска выбирается после измерения, не «по рекламе»
+  - turbo-модель требует 6–10 шагов и CFG 1.5–2.5; тонкая детализация слабее классического DSXL
+next_action: >
+  Дождаться завершения fetch_style04_models.ps1 (или перезапустить — продолжит с места), затем
+  загрузить чекпоинт probe-скриптом, выполнить технический прогон BASE и зафиксировать пики RAM/VRAM.
+  После этого владелец открывает DREAMSHAPER_XL_PIXEL_STYLE.json и оценивает персонажа.
+```
+
+**Наблюдения по памяти (не измерения, а ожидания):** SDXL fp16 — UNet ≈5.1 ГБ + text encoders ≈1.6 ГБ
++ VAE ≈0.16 ГБ. На 8 ГБ VRAM это ~7 ГБ весов; `--reserve-vram 1` оставляет карте ~7 ГБ,
+`--novram --reserve-vram 5` — только ~3 ГБ. Пики будут измерены и записаны в
+`measurements/style04_technical_run.json` после загрузки весов.
+
+---
+
 ## ORC-02R — процедурная генерация НОВОЙ модели Orc (2026-11-13, итерация `MODEL_REWORK`)
 
 ```yaml

@@ -11,7 +11,7 @@
 #
 # The script never installs anything and does not touch global Python/PATH/CUDA.
 param(
-    [ValidateSet('safe', 'cpu', 'gpu')]
+    [ValidateSet('safe', 'cpu', 'gpu', 'xl', 'xl_safe')]
     [string]$Preset = 'safe',
     [string]$Install = 'D:\programs\ComfyUI',
     [string]$Project = 'D:\Projects\CubeGame Factory',
@@ -45,9 +45,13 @@ function Get-FreeRamGB {
 }
 
 $presetArgs = switch ($Preset) {
-    'safe' { @('--novram', '--reserve-vram', '5') }
-    'cpu'  { @('--cpu') }
-    'gpu'  { @('--reserve-vram', '5') }
+    'safe'    { @('--novram', '--reserve-vram', '5') }
+    'cpu'     { @('--cpu') }
+    'gpu'     { @('--reserve-vram', '5') }
+    # SDXL on 8 GB: dynamic VRAM with 1 GB reserved for the OS/other apps.
+    'xl'      { @('--reserve-vram', '1') }
+    # SDXL while keeping the SD1.5-era behaviour (weights in RAM, minimal VRAM).
+    'xl_safe' { @('--novram', '--reserve-vram', '5') }
 }
 $argList = @('-s', $mainPy, '--windows-standalone-build', '--disable-auto-launch', '--port', "$Port") + $presetArgs
 
