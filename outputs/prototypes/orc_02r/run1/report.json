@@ -12,10 +12,10 @@
     "validation": "D:\\Projects\\CubeGame Factory\\outputs\\prototypes\\orc_02r\\run1\\validation.json"
   },
   "blockers": [],
-  "finished": "2026-11-13T18:20:53",
+  "finished": "2026-11-13T18:55:43",
   "numbers": {
-    "boxes": 889,
-    "determinism_glb_sha256": "e4fa441e41e7bdc3c969622967c48c886d03490f2d40c7dcf129758227c501ab",
+    "boxes": 1196,
+    "determinism_glb_sha256": "937e1f09af0c090934ce4f463a538ffcd30b60cb8663573cdbb16dcbb3522691",
     "joint_gaps_voxels": {
       "foot_L->shin_L": 0,
       "foot_R->shin_R": 0,
@@ -30,25 +30,25 @@
     },
     "levels": {
       "LARGE": {
-        "boxes": 326,
-        "voxels": 7075
+        "boxes": 362,
+        "voxels": 7235
       },
       "MEDIUM": {
-        "boxes": 408,
-        "voxels": 8239
+        "boxes": 644,
+        "voxels": 10681
       },
       "SMALL": {
-        "boxes": 155,
-        "voxels": 1362
+        "boxes": 190,
+        "voxels": 1624
       }
     },
-    "main_glb_sha256": "e4fa441e41e7bdc3c969622967c48c886d03490f2d40c7dcf129758227c501ab",
+    "main_glb_sha256": "937e1f09af0c090934ce4f463a538ffcd30b60cb8663573cdbb16dcbb3522691",
     "modules": 21,
     "reference_check": {
-      "deviation_percent": -2.59,
-      "generated_anatomical_height_m": 1.8,
-      "generated_total_height_with_hair_m": 1.92,
-      "note": "рост (по макушке черепа) сверяется с референсом; силуэтные ширины профиля подобраны так, чтобы орк читался без 'блоб-головы' источника",
+      "deviation_percent": 0.06,
+      "generated_anatomical_height_m": 1.849,
+      "generated_total_height_with_hair_m": 1.93,
+      "note": "рост (по макушке черепа) сверяется с измерениями старого Orc; силуэтные пропорции (крупная голова, короткие конечности, широкие плечи) взяты с УТВЕРЖДЁННОГО визуального эталона ORC-02R, а не из старой модели",
       "reference_head_m": {
         "clip_scale": 0.9,
         "depth_m": 1.17,
@@ -62,23 +62,23 @@
       },
       "reference_total_height_m": 1.8479
     },
-    "variation_glb_sha256": "b37323bfeba1c550f3c910e56651902940c72a4c16b4b3f3bf01bc90f5870d26",
-    "voxels": 16676
+    "variation_glb_sha256": "148fc743e77ff0233273e227ebd79ddfabecd597232768e431dc9b178efec6de",
+    "voxels": 19540
   },
   "resources": {
-    "blender_pagefile_peak_mb": 1486.8,
-    "blender_ram_peak_mb": 1279.5,
-    "blender_seconds": 72.46,
-    "generator_seconds": 0.22,
+    "blender_pagefile_peak_mb": 1489.3,
+    "blender_ram_peak_mb": 1283.1,
+    "blender_seconds": 73.81,
+    "generator_seconds": 0.23,
     "vram_delta_mb": 0
   },
   "result": "PASS",
   "stages": {
     "blender": {
-      "detail": "exit=0, result=PASS, 72.46s, пик RAM 1279 МБ",
+      "detail": "exit=0, result=PASS, 73.81s, пик RAM 1283 МБ",
       "ok": true,
-      "ram_peak_mb": 1279.5,
-      "seconds": 72.46,
+      "ram_peak_mb": 1283.1,
+      "seconds": 73.81,
       "stages": {
         "axes_scale": true,
         "blend_reopen": true,
@@ -94,29 +94,29 @@
       "vram_delta_mb": 0
     },
     "determinism": {
-      "detail": "sha256 run1=e4fa441e41e7 run2=e4fa441e41e7",
+      "detail": "sha256 run1=937e1f09af0c run2=937e1f09af0c",
       "identical": true,
       "ok": true,
-      "seconds": 0.18
+      "seconds": 0.2
     },
     "generate_new_geometry": {
-      "detail": "16676 вокселей, 889 кубоидов, 256536 байт GLB",
+      "detail": "19540 вокселей, 1196 кубоидов, 340328 байт GLB",
       "ok": true,
-      "seconds": 0.22
+      "seconds": 0.23
     },
     "profile_variation": {
-      "detail": "изменение профиля даёт другой GLB (sha256 b37323bfeba1), кубоидов 906 (+17)",
+      "detail": "изменение профиля даёт другой GLB (sha256 148fc743e77f), кубоидов 1211 (+15)",
       "different": true,
       "ok": true,
-      "seconds": 0.18
+      "seconds": 0.2
     },
     "reference_measurement": {
       "detail": "используется существующий measurements\\orc_reference.json",
       "ok": true
     }
   },
-  "started": "2026-11-13T18:19:40",
+  "started": "2026-11-13T18:54:28",
   "status": "MODEL_PENDING_REVIEW",
   "task": "ORC-02R",
-  "wall_seconds": 73.2
+  "wall_seconds": 74.86
 }

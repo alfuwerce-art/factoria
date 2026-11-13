@@ -12,28 +12,28 @@
   "issues": [],
   "numbers": {
     "bbox_max": [
-      0.51,
-      0.21,
-      1.92
+      0.509,
+      0.214,
+      1.93
     ],
     "bbox_min": [
-      -0.57,
-      -0.33,
+      -0.59,
+      -0.322,
       0.0
     ],
-    "blend_bytes": 182713,
+    "blend_bytes": 214560,
     "degenerate_parts": [],
     "dimensions_m": [
-      1.08,
-      0.54,
-      1.92
+      1.099,
+      0.536,
+      1.93
     ],
-    "import_seconds": 0.12,
+    "import_seconds": 0.11,
     "joint_gaps": {
       "arm_L": {
         "forearm_L|hand_L": {
           "aabb_overlap_xy": true,
-          "gap_z_m": 0.03
+          "gap_z_m": 0.0268
         },
         "upper_arm_L|forearm_L": {
           "aabb_overlap_xy": true,
@@ -43,7 +43,7 @@
       "arm_R": {
         "forearm_R|hand_R": {
           "aabb_overlap_xy": true,
-          "gap_z_m": 0.03
+          "gap_z_m": 0.0268
         },
         "upper_arm_R|forearm_R": {
           "aabb_overlap_xy": true,
@@ -111,34 +111,34 @@
     "objects": 21,
     "parts_with_vertex_colors": 21,
     "render_seconds": {
-      "front": 23.98,
-      "side": 16.92,
-      "three_quarter": 30.17
+      "front": 25.93,
+      "side": 16.84,
+      "three_quarter": 29.36
     },
     "roundtrip": {
       "dimensions": [
-        1.08,
-        0.54,
-        1.92
+        1.099,
+        0.536,
+        1.93
       ],
       "materials_match": true,
       "names_match": true,
       "objects": 21,
       "positions_identical": true,
       "triangles_match": true,
-      "unique_positions": 3879
+      "unique_positions": 5280
     },
-    "roundtrip_bytes": 835628,
-    "triangles": 10668,
-    "vertices": 7112
+    "roundtrip_bytes": 1122476,
+    "triangles": 14352,
+    "vertices": 9568
   },
   "result": "PASS",
-  "seconds_total": 71.6,
+  "seconds_total": 73.0,
   "source_glb": "D:\\Projects\\CubeGame Factory\\outputs\\prototypes\\orc_02r\\run1\\orc_new.glb",
   "stage": "ORC-02R/blender_validation",
   "stages": {
     "axes_scale": {
-      "detail": "dimensions(XYZ)=[1.08, 0.54, 1.92] низ модели z=0.0 (пол з=0, Y-up→Z-up корректен)",
+      "detail": "dimensions(XYZ)=[1.099, 0.536, 1.93] низ модели z=0.0 (пол з=0, Y-up→Z-up корректен)",
       "ok": true
     },
     "blend_reopen": {
@@ -146,15 +146,15 @@
       "ok": true
     },
     "geometry_integrity": {
-      "detail": "verts=7112 tris=10668 degenerate=[] nan=[]",
+      "detail": "verts=9568 tris=14352 degenerate=[] nan=[]",
       "ok": true
     },
     "glb_roundtrip": {
-      "detail": "{\"objects\": 21, \"names_match\": true, \"unique_positions\": 3879, \"positions_identical\": true, \"triangles_match\": true, \"materials_match\": true, \"dimensions\": [1.08, 0.54, 1.92]}",
+      "detail": "{\"objects\": 21, \"names_match\": true, \"unique_positions\": 5280, \"positions_identical\": true, \"triangles_match\": true, \"materials_match\": true, \"dimensions\": [1.099, 0.536, 1.93]}",
       "ok": true
     },
     "import": {
-      "detail": "21 модулей за 0.12s, отсутствуют: []",
+      "detail": "21 модулей за 0.11s, отсутствуют: []",
       "ok": true
     },
     "independent_editing": {
@@ -170,11 +170,11 @@
       "ok": true
     },
     "save_blend": {
-      "detail": "D:\\Projects\\CubeGame Factory\\outputs\\prototypes\\orc_02r\\run1\\blender\\orc_new.blend (182713 B)",
+      "detail": "D:\\Projects\\CubeGame Factory\\outputs\\prototypes\\orc_02r\\run1\\blender\\orc_new.blend (214560 B)",
       "ok": true
     },
     "three_views": {
-      "detail": "{\"front\": 23.98, \"side\": 16.92, \"three_quarter\": 30.17}",
+      "detail": "{\"front\": 25.93, \"side\": 16.84, \"three_quarter\": 29.36}",
       "ok": true
     }
   }
