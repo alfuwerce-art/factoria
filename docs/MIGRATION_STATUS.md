@@ -24,6 +24,11 @@
 | `git push origin factory/work` | успешно, `ca5bfef..8395409` |
 | Проверка | `git rev-parse HEAD` == `git rev-parse origin/factory/work` == `83954091a30ee82771c5b0e9a8d5b600c4f1febd`; `git diff HEAD origin/factory/work` — **0 строк**; на remote 47 файлов |
 
+**Итоговое состояние публикации** проверено на коммите **`03d35fe`** (после добавления ComfyUI):
+`origin/factory/work == HEAD`, `git diff` — 0 строк, **65 файлов** на remote, крупнейший блоб 670 КБ
+(PNG-доказательство), весов/бинарей/секретов нет. `origin/main` остаётся на `6dbb3d8` (не изменялся).
+Последующие правки документации фиксируются отдельными коммитами в `factory/work`.
+
 ### Что теперь есть в `factory/work`
 
 - Четыре главных документа Factory: `AGENTS.md`, `01_DEEPSEEK_FACTORY_IMPLEMENTATION_TZ.md`, `02_FACTORY_OPERATIONAL_DESIGN.md`, `03_FACTORY_PROJECT_MEMORY.md`.
