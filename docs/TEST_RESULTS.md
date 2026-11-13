@@ -354,6 +354,8 @@ checks:
     result: PASS  (CheckpointLoaderSimple.ckpt_name = ["v1-5-pruned-emaonly-fp16.safetensors"])
   - name: SAFE_BASELINE (--novram) запускается
     result: PASS  (ready 11.2–11.7 с; device cuda:0; WS 1025–1026 MB; VRAM +76…79 MiB)
+  - name: Launcher владельца (`launch_safe_baseline.bat`) стартует сервер
+    result: PASS  (`cmd /c ...bat` → /system_stats 200 за 14.3 с, device cuda:0, ноды загружены)
   - name: CPU_FALLBACK (--cpu) запускается
     result: PASS  (ready 11.2 с; device cpu; WS 934 MB; VRAM ≈0; лог Crystools «CUDA is available, but torch is using CPU»)
   - name: Workflow принимаются валидатором ComfyUI

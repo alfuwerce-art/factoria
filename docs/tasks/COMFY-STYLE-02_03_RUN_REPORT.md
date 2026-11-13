@@ -65,6 +65,7 @@ NEXT=owner-run first generation + RAM/VRAM measurement
 | Существующий ComfyUI найден, второй не ставился | `Test-Path D:\programs\ComfyUI`, `comfyui_version.py` | 0.45.0, portable, 4.25 ГБ до наших установок |
 | Embedded python / torch / CUDA | `python_embeded\python.exe -c "import torch..."` | Python 3.13.14, torch 2.14.1+cu130, CUDA 13.0, `cuda.is_available()=True` |
 | Сервер стартует в SAFE_BASELINE | `factoria_launch.ps1 -Preset safe -MeasureIdle` | `server_ready=True` за 11.2 с (тёплый старт), `/system_stats` 200 |
+| **Launcher владельца** (`launch_safe_baseline.bat`, двойной клик) | `cmd /c scripts\comfyui\launch_safe_baseline.bat` → опрос `/system_stats` | READY за **14.3 с**, `device=cuda:0 RTX 4060 Laptop`, ноды поднялись (rgthree 48 нод) |
 | Сервер стартует в CPU_FALLBACK | `factoria_launch.ps1 -Preset cpu -MeasureIdle` | `server_ready=True` за 11.2 с, `device=cpu`, лог Crystools: `CUDA is available, but torch is using CPU` |
 | Web UI | `GET http://127.0.0.1:8188/` | HTTP 200, 19 885 Б |
 | Custom nodes импортируются без ошибок | лог сервера `logs\COMFY-STYLE_server_*` | нет строк `IMPORT FAILED`/`Cannot import`; есть только информационное `comfy_kitchen backend triton: unavailable` (triton не требуется) |
