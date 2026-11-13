@@ -1,9 +1,9 @@
 # CubeGame Asset & Animation Factory Lab — межчатовая память
 
 **Документ:** `03_FACTORY_PROJECT_MEMORY.md`  
-**Версия:** 1.4 · 13.11.2026  
-**Статус:** `PREP-00 = READY_FOR_REVIEW`, **`PREP-01 = READY_FOR_REVIEW`** — Blender 5.2.4 LTS установлен и проверен реальным запуском (Rigify, skinning, контрольные позы, FBX-экспорт и обратный импорт). PREP-02 не начат.  
-**Рабочая папка (действующая):** `D:\Projects\CubeGame Factory\` — единый канонический каталог проекта с 2026-11-13 12:05 MSK. Содержит четыре документа, журналы `docs/`, доказательства `logs/`, скрипты `scripts/blender/`, выходы `outputs/`, исходники пресета `plugins/` и локальный git-репозиторий (ветки `main` / `factory/work`). Ранее созданный `D:\Projects\CubeGameFactoryLab` **SUPERSEDED**: оставлен как архив предыдущей сессии, не использовать для новой работы.  
+**Версия:** 1.5 · 13.11.2026  
+**Статус:** `PREP-00 = READY_FOR_REVIEW`, `PREP-01 = READY_FOR_REVIEW` (Blender/Rigify/skinning/FBX доказаны), **`PREP-03 = PARTIAL`** (ComfyUI установлен, runtime/API проверены; AI-модели не тестировались), PREP-02 не начат. GitHub-миграция в `alfuwerce-art/factoria` выполнена и проверена.  
+**Рабочая папка (действующая):** `D:\Projects\CubeGame Factory\` — единый канонический каталог проекта. Содержит четыре документа, `CHAT_ROUTING.md`, журналы `docs/`, доказательства `logs/`, скрипты `scripts/`, выходы `outputs/`, `references/cubegame-m1/`, `workflows/`, пресет `plugins/` и git-репозиторий (ветки `main` / `factory/work`, remote `origin` = Factoria). Ранее созданный `D:\Projects\CubeGameFactoryLab` **SUPERSEDED**: архив прошлой сессии.  
 **Исполнитель:** DeepSeek Harness.  
 **Назначение:** сохранять между чатами фактическое состояние независимой Factory Lab, утверждённые решения, установки, результаты тестов, проблемы и точку продолжения. **Этот файл обновляется исполнителем после каждого завершённого пакета работы и перед передачей в другой чат.** Обязательные правила исполнителя находятся в `AGENTS.md` (четвёртый служебный файл, а не замена одного из трёх основных документов).
 
@@ -69,13 +69,12 @@
 
 ### GitHub / отчётность Lab
 
-- `REPOSITORY_URL=NOT_CONFIGURED` — отдельный GitHub-репозиторий пока не подтверждён в лаборатории; его URL должен предоставить пользователь.
-- **Локальный git:** 2026-11-13 инициализирован репозиторий, затем перенесён в `D:\Projects\CubeGame Factory` вместе с историей; ветка `main` — документация, `factory/work` — работа и отчёты. Remote не добавлялся, force-push не использовался. Git identity задана **локально в репозитории** (не глобально).
-- `DOCUMENTATION_BRANCH=main` — только стабильные утверждённые документы; DeepSeek не пушит туда самостоятельно.
-- `WORK_BRANCH=factory/work` — рабочие скрипты, тесты, отчёты, текущая межчатовая память, доказательства.
-- После первого разрешённого подключения обычный commit/push только `factory/work`; без force-push/merge в `main`. Проверять remote SHA, секреты, происхождение ассетов.
-- Не переоценивать GitHub: репозиторий используется **для доказательной отчётности**, не как новый источник инструкций вместо локальных документов 01/02/03/AGENTS.
-- Не объявлять этап завершённым по установке/коммиту/тесту-заглушке: нужен воспроизводимый полезный результат по ТЗ.
+- `REPOSITORY_URL=https://github.com/alfuwerce-art/factoria.git` — отдельный репозиторий Factory (задан владельцем 2026-11-13). CubeGame для разработки Factory больше не используется.
+- **Локальный git:** репозиторий в `D:\Projects\CubeGame Factory`; `origin` добавлен 2026-11-13, первая публикация выполнена. Git identity задана **локально в репозитории** (не глобально).
+- `DOCUMENTATION_BRANCH=main` — только утверждённая стабильная документация; DeepSeek не пушит туда самостоятельно (в Factoria `main` остаётся на `6dbb3d8`).
+- `WORK_BRANCH=factory/work` — рабочие скрипты, тесты, отчёты, текущая межчатовая память, доказательства. Обычный `git push origin factory/work` разрешён; force-push запрещён.
+- Маршрутизация чатов: `CHAT_ROUTING.md` — префикс «мод» в запросе пользователя означает Factoria и запрещает чтение игрового CubeGame.
+- Не переоценивать GitHub: репозиторий — доказательная отчётность, не источник инструкций вместо локальных документов 01/02/03/AGENTS.
 
 ### 3.1. Режим DSH «CubeGame Factory»
 
@@ -93,11 +92,14 @@
 - **УСТАНОВЛЕНО 2026-11-13 (PREP-01):** **Blender 5.2.4 LTS** (build `cd5dc428cce1`, 2026-11-10, внутренний Python 3.13.13) из официального zip `blender-5.2.4-windows-x64.zip` (405 779 142 Б), SHA-256 `bbd78f8931dc940444da4ff2983374930f9f5c092ae0e330588e9760bb9d967c` **совпал** с опубликованным. Распаковано портативно в `D:\programs\Blender\5.2\` (901.3 МБ, 6530 файлов). PATH не менялся, установщик не использовался. Пользовательский конфиг изолирован: `BLENDER_USER_CONFIG=D:\Projects\CubeGame Factory\environments\blender\config`. Evidence: `logs/PREP-01_rigify_skinning_2026-11-13.txt`, `logs/PREP-01_isolation_2026-11-13.txt`.
 - **Blender add-ons (факт, 5.2.4):** Rigify **0.6.10**, io_scene_fbx **5.15.0**, io_scene_gltf2 **5.2.41** — все встроенные (`5.2\scripts\addons_core\`), отдельной загрузки не требуют. Evidence: `logs/PREP-01_diagnostics_2026-11-13.txt`.
 - **Измерено в PREP-01:** полный прогон Rigify+skinning+FBX — **11.8–12.0 с** (два прогона), пиковый рабочий набор процесса Blender **394–402 МБ**, свободная RAM 20.43 → 20.45 ГБ, рендер Cycles **на CPU** (VRAM не занималась). Риг: metarig 159 костей → rig 706 (160 DEF + 546 control). Манекен: 1280 вершин (160 оболочек) → voxel remesh → 3926 вершин, 1 оболочка. Веса: 160 групп, 0 вершин без весов, но сумма весов 0.732–0.9999 (не нормирована). Деформация: IK 0.562 м, FK 0.332 м, прямой DEF 0.0 м. FBX 1.54 МБ → обратный импорт: 706 костей, 145 vgroups, деформация 0.566 м.
+- **GitHub (Factoria) 2026-11-13:** remote `origin` = `https://github.com/alfuwerce-art/factoria.git`. Истории локальная и удалённая были **не связаны** (`merge-base` пуст) — объединено через `git merge origin/factory/work --allow-unrelated-histories`; конфликт был только в `README.md` (add/add), взят локальный README + добавлен раздел о маршрутизации. Merge-коммит `8395409`, push `ca5bfef..8395409`; проверено: `HEAD == origin/factory/work`, `git diff` пустой, на remote 47 файлов. `main` в Factoria не изменялся.
+- **УСТАНОВЛЕНО 2026-11-13 (PREP-03):** **ComfyUI 0.45.0 portable NVIDIA** из официального GitHub release (`.7z`, 2 071 479 423 Б, SHA-256 `60c12e8c…a6f` совпал) → `D:\programs\ComfyUI\` (4.25 ГБ, 63 891 файл, изолированный `python_embeded` 3.13.14, torch **2.14.1+cu130**, CUDA runtime 13.0). Распаковано официальным `7zr.exe` 26.04 (public domain, один файл в `D:\programs\_installers\`). PATH и системный Python не менялись, CUDA Toolkit не ставился, **веса моделей не скачивались**.
+- **Измерено в PREP-03:** тёплый старт сервера 10.7–11.8 с, **первый холодный старт ~146 с** (миграция SQLite + скан ассетов); smoke-граф `EmptyImage → SaveImage` без моделей — 1.0 с, PNG 96×96 сохранён и скачан через `/view`. Пик RAM процесса ComfyUI **972 МБ** (GPU-режим) / **859 МБ** (CPU-режим), свободная RAM 19.4 → минимум 18.4 ГБ. Прирост VRAM всей карты при инициализации **≈ +86 МБ** (nvidia-smi на WDDM не отдаёт per-process память). CUDA-проверка встроенного torch: RTX 4060 Laptop, capability 8.9, matmul 2048² за 0.12 с, пик allocated 56.1 МБ / reserved 68 МБ.
 - **Обнаруженное ПО (факт, версии и пути):** Python 3.13.14 (`C:\Users\bow\AppData\Local\Programs\Python\Python313\python.exe`, в PATH по умолчанию; второй 3.14.6 через `py`), pip 26.1.2, Git 2.55.0, VS Code 1.145.2, Unity Hub 3.22.5, Unity **6000.3.27f2** (`D:\Unity\Hub\Editor\6000.3.27f2\Editor\Unity.exe`) и 6000.6.7f1, Ollama 0.40.10 (не запущен), .NET 7/8, WinRAR 7.13.
-- **Отсутствует (подтверждено поиском):** **Blender**, Rigify (следствие), **ComfyUI**, Cascadeur, n8n, системный Node.js/npm/pnpm, ffmpeg в PATH, CUDA Toolkit (`nvcc`), 7-Zip (запись в реестре устарела — каталога нет).
-- **ComfyUI:** ТЗ и память считали его имеющимся (`USER_REPORTED`), но он **не найден** (нет каталога `*omfy*` на C:\ и D:\ до глубины 3–4, нет ярлыков, нет записи в реестре, порт 8188 не слушается). Требуется путь от пользователя; установку не дублировать.
+- **Отсутствует (подтверждено поиском на PREP-00, актуально с оговорками):** Blender и ComfyUI **установлены 2026-11-13** (см. ниже); по-прежнему отсутствуют Cascadeur, n8n, системный Node.js/npm/pnpm, ffmpeg в PATH, CUDA Toolkit (`nvcc`), 7-Zip (запись в реестре устарела — используется отдельный `7zr.exe`).
+- **ComfyUI (актуально 2026-11-13):** старый экземпляр был удалён владельцем; выполнена новая установка с нуля — официальный portable 0.45.0 NVIDIA в `D:\programs\ComfyUI\`, SHA-256 сверен, runtime/API проверены (PREP-03 `PARTIAL`).
 - **Ловушки среды:** `python3.exe` в PATH — заглушка Microsoft Store (не использовать); глобальный Python содержит 47 сторонних пакетов, но **без torch/numpy** (чистая база, отдельный venv обязателен); shell — Windows PowerShell **5.1** (нет pwsh 7), `Tee-Object` пишет UTF-16 → перекодировать в UTF-8. Git identity на 2026-11-13 задана локально в репозитории.
-- Unity 6000.3 LTS, VS Code, Ollama и DeepSeek Harness пользователь использует; версии подтверждены. ComfyUI — **не подтверждён**.
+- Unity 6000.3 LTS, VS Code, Ollama и DeepSeek Harness пользователь использует; версии подтверждены. ComfyUI установлен 2026-11-13 (0.45.0 portable).
 - Не смешивать интеллект существа с skeleton archetype: примитивный человекоподобный и разумный гуманоид могут разделять скелет, но отличаются дизайном/анимационной индивидуальностью.
 - Не считать Alpha-анимации итоговой целью: новый CubeGame combat требует **новых** боевых motion clips и проверенной синхронизации с gameplay.
 
@@ -112,7 +114,7 @@
 | **PREP-00** | Аудит ПК, ПО, дисков, лицензий до загрузок | **READY_FOR_REVIEW** | `logs/PREP-00_detection_2026-11-13.txt`, `docs/TOOL_INVENTORY.md`, `docs/INSTALLATION_LOG.md`, `docs/LICENSE_MATRIX.md` |
 | **PREP-01** | Blender: установка/версия, GUI + background; Rigify: add-on, metarig, generate rig на собственной фигуре; встроенные Armature Modifier / Automatic Weights; экспорт | **READY_FOR_REVIEW** (все операции SMOKE_PASS) | `logs/PREP-01_rigify_skinning_2026-11-13.txt`, `logs/PREP-01_headless_smoke_2026-11-13.txt`, `logs/PREP-01_diagnostics_2026-11-13.txt`, `logs/PREP-01_isolation_2026-11-13.txt`, `outputs/reports/prep01_rigify_skinning.json`, `outputs/blender/prep01_rigify_skinned.blend/.fbx`, `outputs/blender/prep01_rest_pose.png`, `outputs/blender/prep01_control_pose.png`, `outputs/blender/prep01_gui_open.png`, `docs/TEST_RESULTS.md` |
 | **PREP-02** | Обмен форматами `.blend`/`.fbx`/`.glb`: import/export, масштаб, оси, материалы, кости, веса, анимация | `PLANNED` | минимальный FBX-экспорт уже проверен в PREP-01 |
-| **PREP-03** | ComfyUI и локальные модели геометрии (≥2 подхода, 3D-to-3D отдельно от image-to-3D) | `BLOCKED` | ComfyUI не найден |
+| **PREP-03** | ComfyUI и локальные модели геометрии (≥2 подхода, 3D-to-3D отдельно от image-to-3D) | `PARTIAL` — установка + runtime/API smoke PASS; модели и 3D-генерация не тестировались | `logs/PREP-03_run_gpu_2026-11-13.txt`, `logs/PREP-03_run_cpu_2026-11-13.txt`, `logs/PREP-03_cuda_sanity_2026-11-13.txt`, `outputs/reports/prep03_comfyui_smoke_*.json`, `outputs/comfyui/prep03_smoke_from_api.png`, `workflows/comfyui_prep03_smoke_api.json`, `docs/TEST_RESULTS.md` |
 | **PREP-04** | Autorig и skinning: нативные auto weights + rigid attachment; сравнение UniRig/MeshRig и др. | `PLANNED` | частично: auto weights проверены на манекене (PREP-01) |
 | **PREP-05** | Новые анимации: реальный bone clip из Blender/Cascadeur; локальные AI motion кандидаты | `PLANNED` | — |
 | **PREP-06** | Оркестрация и контракты без кастомизации: manifest/schema, команды-образцы, решение Python vs n8n | `PLANNED` | — |
@@ -127,7 +129,8 @@
 | **Blender** | mesh, armature, skinning, animation export, CLI | **5.2.4 LTS** — `D:\programs\Blender\5.2\blender.exe`; SHA-256 сверен; GUI/headless/Rigify/skinning/FBX проверены | PREP-02: обмен форматами |
 | Rigify | metarig → control rig | **0.6.10** встроенный; rig 706 костей (160 DEF); auto weights + позы проверены | PREP-04: сравнить с autorig-кандидатами |
 | Python + venv | smoke runner, среды | **3.13.14** в PATH; `venv` работает | `environments\venv-prep` **не создавался осознанно** — Blender несёт свой Python 3.13.13, внешний runner появится на PREP-02 |
-| **ComfyUI** | AI-workflows | **NOT_FOUND** (не подтверждён) | Получить путь от пользователя; не дублировать |
+| **ComfyUI** | AI-workflows | **0.45.0 portable** — `D:\programs\ComfyUI\`; сервер/UI/API smoke PASS; CUDA работает | Согласовать конкретную AI-модель (источник/размер/лицензия/VRAM) → тест генерации |
+| 7-Zip CLI | распаковка `.7z` | **7zr.exe 26.04** в `D:\programs\_installers\` (public domain, PATH не менялся) | — |
 | Cascadeur | авторинг motion, FBX | **NOT_INSTALLED** | Сначала лицензия/тариф/экспорт FBX — потом решение |
 | Локальная 3D AI | новое 3D / переработка mesh | NOT_SELECTED | Сравнить кандидатов и VRAM (≤6.7 ГБ фактически) |
 | Autorig/skin tool | skeleton fitting, auto weights | NOT_SELECTED | PREP-04: кандидаты + лицензии + evidence |
@@ -144,16 +147,19 @@
 
 **Подтверждённые блокеры (PREP-00):**
 - **B1 — Blender отсутствует.** **ЗАКРЫТ 2026-11-13 (PREP-01):** установлен Blender 5.2.4 LTS, все базовые операции проверены.
-- **B2 — ComfyUI не найден.** Не подтверждён ни каталог, ни ярлык, ни реестр, ни порт 8188. Блокирует PREP-03; нужен фактический путь от пользователя.
-- **B3 — нет remote Factory-репозитория** (`REPOSITORY_URL=NOT_CONFIGURED`) → публикация отчётов невозможна, работа локальная.
+- **B2 — ComfyUI не найден.** **ЗАКРЫТ 2026-11-13 (PREP-03):** установлен официальный portable 0.45.0, runtime/API проверены. Остаётся прикладной вопрос (не блокер): какие AI-модели использовать и сколько они займут VRAM.
+- **B3 — remote Factory-репозитория не было.** **ЗАКРЫТ 2026-11-13:** `origin` = `alfuwerce-art/factoria.git`, `factory/work` синхронизирована и проверена.
 - **B4 — Git identity была не настроена** (`user.name`/`user.email` пусты). **ЗАКРЫТ 2026-11-13:** identity задана локально в репозитории (`DeepSeek Harness`, `factory-lab@localhost`); global-настройки не менялись.
 
-**Ловушки Blender, выявленные практикой (PREP-01) — не повторять ошибку:**
-- `addon_utils.enable("rigify")` в 5.2.4 **непригоден**: операторы регистрируются, но `bpy.ops.pose.rigify_generate()` падает с `'RigifyParameters' object has no attribute 'make_custom_pivot'`. Работает `bpy.ops.preferences.addon_enable(module='rigify')`.
-- Bone Heat Weighting **полностью отказывает** на несвязной геометрии (160 отдельных боксов → 0 весов на 1280 вершинах). Сначала склеить геометрию в одну оболочку (voxel remesh), потом auto weights.
-- Rigify DEF-кости **не** управляются напрямую (constraints): позы только через control-кости (`hand_ik.*`/`foot_ik.*`, `*_fk.*` при `IK_FK=1.0`).
-- Auto weights **не нормирует** веса: сумма на вершину 0.73–0.9999 → нужен шаг нормализации (PIPELINE_GAPS F8).
-- FBX выгружает весь control rig (706 костей) — чистый game-skeleton требует отдельного deform-only экспорта (PIPELINE_GAPS F9).
+**Ловушки, выявленные практикой (не повторять):**
+- `addon_utils.enable("rigify")` в 5.2.4 **непригоден**: генерация падает с `'RigifyParameters' object has no attribute 'make_custom_pivot'`. Работает `bpy.ops.preferences.addon_enable(module='rigify')`.
+- Bone Heat Weighting **полностью отказывает** на несвязной геометрии (160 боксов → 0 весов). Сначала voxel remesh в одну оболочку, потом auto weights.
+- Rigify DEF-кости **не** управляются напрямую (constraints): позы только через control-кости (`*_ik`, `*_fk` при `IK_FK=1.0`).
+- Auto weights **не нормирует** веса (0.73–0.9999) → нужен шаг нормализации (PIPELINE_GAPS F8).
+- FBX выгружает весь control rig (706 костей) — нужен отдельный deform-only экспорт (F9).
+- ComfyUI **первый запуск ~146 с** (SQLite-миграция + скан ассетов): readiness-timeout в оркестраторе ≥300 с (F13).
+- **PowerShell 5.1:** `.ps1` с кириллицей сохранять **в UTF-8 с BOM**, иначе парсер ломается; `Start-Process -ArgumentList` не квотирует пути с пробелами — оборачивать аргументы в кавычки самому.
+- `nvidia-smi --query-compute-apps` на Windows/WDDM не показывает память процесса ComfyUI (возвращает 0) — VRAM мерить по всей карте и вычитать baseline.
 
 **Известные риски:**
 - 8 ГБ VRAM ограничивают локальные 3D / motion модели;
@@ -163,12 +169,12 @@
 - внешние лицензии и платные экспорты могут ограничивать использование;
 - независимый smoke test не доказывает совместимость с реальным Unity Player.
 
-**Решения ожидают подтверждения:** путь ComfyUI, установка Cascadeur (после лицензии), выбор autorig/AI motion/3D-кандидатов, нужен ли n8n, какие части Python automation понадобятся позже, URL Factory-репозитория.
+**Решения ожидают подтверждения:** выбор конкретной AI-модели/кандидатов (источник, размер, лицензия, VRAM), установка Cascadeur (после лицензии), нужен ли n8n, какие части Python automation понадобятся позже.
 
 **Открытые вопросы к пользователю (минимально необходимое):**
-1. Где находится ComfyUI (путь) — или его нужно устанавливать заново?
-2. URL отдельного GitHub-репозитория Factory (для `factory/work`).
-3. Согласование будущих AI-весов (источник, размер, лицензия, VRAM) — отдельно на PREP-03/04/05.
+1. Согласование AI-модели для ComfyUI (источник, размер, лицензия, требуемая VRAM, качество) — только после этого тест генерации/переработки геометрии.
+2. Cascadeur: лицензия/тариф и ограничения экспорта FBX (перед установкой).
+3. Приёмка (ACCEPTED) по PREP-00/PREP-01 — сейчас оба `READY_FOR_REVIEW`.
 
 ## 8. Хронология работ (append-only, кратко)
 
@@ -185,6 +191,10 @@
 | 2026-11-13 | PREP-01 (отладка) | Найдены и зафиксированы 3 реальные ловушки: `addon_utils.enable('rigify')` ломает генерацию; heat weighting отказывает на несвязных боксах (0 весов); DEF-кости Rigify не управляются напрямую. Исправлено: официальный `addon_enable`, voxel remesh в одну оболочку, позы через control-кости | `logs\PREP-01_diagnostics_2026-11-13.txt` | Полный прогон |
 | 2026-11-13 | PREP-01 (результат) | Полный прогон PASS: rigify_generate (159→706 костей), auto weights (160 групп, 0 вершин без весов), деформация IK 0.562 м / FK 0.332 м, рендеры rest+posed различаются, `.blend` 574 КБ, FBX 1.54 МБ и обратный импорт с рабочей деформацией 0.566 м. Прогон 11.8–12.0 с, пик 394–402 МБ RAM, CPU-рендер (VRAM не занималась) | `logs\PREP-01_rigify_skinning_2026-11-13.txt`; `outputs\reports\prep01_rigify_skinning.json`; `outputs\blender\prep01_rigify_skinned.blend/.fbx`; PNG | PREP-02 |
 | 2026-11-13 | PREP-01 (документация) | Обновлены `docs\TEST_RESULTS.md` (PREP-01 yaml + измерения + ловушки), `docs\TOOL_INVENTORY.md`, `docs\INSTALLATION_LOG.md`, `docs\LICENSE_MATRIX.md`, `docs\PIPELINE_GAPS.md` (G1 закрыт, добавлены F8–F10), `README.md` | `docs\*`, `README.md` | Коммит в `factory/work` |
+| 2026-11-13 | GitHub-миграция | Добавлен remote Factoria; `fetch` показал несвязанные истории; `merge --allow-unrelated-histories` (конфликт только `README.md`, взят локальный + раздел о маршрутизации) → merge-коммит `8395409`; push `ca5bfef..8395409`; проверено `HEAD == origin/factory/work`, `diff` пустой, 47 файлов на remote | `docs\MIGRATION_STATUS.md`; `git log --graph` | Четыре документа, скрипты, PREP-00/01 и доказательства опубликованы |
+| 2026-11-13 | PREP-03 (установка) | Скачан и проверен официальный ComfyUI 0.45.0 portable NVIDIA (1.93 ГБ, SHA-256 совпал), распакован `7zr.exe` в `D:\programs\ComfyUI\` (4.25 ГБ); embedded python 3.13.14 + torch 2.14.1+cu130; PATH и системный Python не менялись | `logs\PREP-03_cuda_sanity_2026-11-13.txt`; `docs\INSTALLATION_LOG.md` | Запуск и API smoke |
+| 2026-11-13 | PREP-03 (испытание) | GPU (`--reserve-vram 5`) и CPU (`--cpu`) прогоны PASS: сервер 10.7–11.8 с (холодный ~146 с), UI 200, `POST /prompt` → `/history` → `/view`, PNG 96×96; пик RAM процесса 972/859 МБ, прирост VRAM ≈86 МБ; CUDA matmul 0.12 с, allocated 56.1 МБ | `logs\PREP-03_run_gpu/cpu_2026-11-13.txt`; `outputs\reports\prep03_comfyui_smoke_*.json`; `outputs\comfyui\prep03_smoke_from_api.png` | Документация + commit/push |
+| 2026-11-13 | PREP-03 (документация) | Обновлены `TEST_RESULTS` (PREP-03 yaml + карточка RAM/VRAM), `TOOL_INVENTORY`, `INSTALLATION_LOG`, `LICENSE_MATRIX` (ComfyUI GPL-3.0, torch/CUDA, 7zr), `PIPELINE_GAPS` (G2 закрыт, F11–F13), `MIGRATION_STATUS` (ComfyUI-раздел), `README`, память v1.5 | `docs\*`, `README.md`, `03_FACTORY_PROJECT_MEMORY.md` | Коммит в `factory/work` |
 
 ## 9. Что делать DeepSeek прямо в следующем чате
 
@@ -192,14 +202,16 @@
 
 **Выполнено в PREP-01 (2026-11-13):** Blender 5.2.4 LTS установлен и проверен; Rigify сгенерировал rig; auto weights, контрольные позы, FBX-экспорт и обратный импорт доказаны на собственной фигуре. Статус `READY_FOR_REVIEW`.
 
+**Выполнено в PREP-03 (2026-11-13, частично):** ComfyUI 0.45.0 portable установлен и проверен как runtime: сервер, UI, API-workflow без моделей, CUDA-вычисления встроенного torch, замеры RAM/VRAM. Статус `PARTIAL` — AI-модели и генерация 3D не проверялись.
+
 **Следующая сессия — PREP-02 (обмен форматами):**
 
-1. Перечитать `AGENTS.md`, `01`, `02`, `03`; сверить состояние: `Test-Path D:\programs\Blender\5.2\blender.exe`, наличие `outputs\blender\prep01_rigify_skinned.blend`.
+1. Перечитать `AGENTS.md`, `01`, `02`, `03`, `CHAT_ROUTING.md`; сверить состояние: `Test-Path D:\programs\Blender\5.2\blender.exe`, `Test-Path D:\programs\ComfyUI\run_nvidia_gpu.bat`, наличие `outputs\blender\prep01_rigify_skinned.blend`.
 2. На **собственной** тестовой модели проверить обмен: `.blend` → `.fbx` → импорт, `.blend` → `.glb` → импорт; зафиксировать масштаб, оси (Y-up vs Z-up), материалы, дерево костей, веса, наличие action.
 3. Составить таблицу `INPUT→OUTPUT` с потерями по каждому формату; отдельно зафиксировать, что теряется при FBX-экспорте control rig (706 костей) и как получить deform-only скелет.
 4. Проверить простой анимационный клип (idle/swing) и его выживание после экспорта/импорта — это мост к PREP-05.
-5. Обновить `docs/TEST_RESULTS.md` (PREP-02 yaml), `docs/PIPELINE_GAPS.md`, эту память; локальный commit в `factory/work`.
-6. **Не начинать** PREP-03 (ComfyUI), пока пользователь не подтвердит путь установки. Не писать CubeGame-специфичные скрипты; Unity не запускать.
+5. Обновить `docs/TEST_RESULTS.md` (PREP-02 yaml), `docs/PIPELINE_GAPS.md`, эту память; commit/push в `factory/work`.
+6. **Не начинать** AI-эксперименты в ComfyUI без согласования модели; Unity не запускать; CubeGame не открывать.
 
 ## 10. Протокол обновления межчатовой памяти
 

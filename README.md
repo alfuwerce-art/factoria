@@ -24,7 +24,7 @@
 | PREP-01 (Blender / Rigify / skinning / экспорт) | **READY_FOR_REVIEW** — Blender 5.2.4 LTS установлен и проверен, Rigify + auto weights + позы + FBX доказаны на собственной фигуре |
 | Blender | **5.2.4 LTS** → `D:\programs\Blender\5.2\blender.exe` (SHA-256 сверен, PATH не менялся) |
 | Rigify | **0.6.10**, встроенный; генерирует rig (160 deform + 546 control), skinning работает |
-| ComfyUI | **НЕ НАЙДЕН** (расхождение с ТЗ) → нужен путь от пользователя |
+| ComfyUI | **0.45.0 portable** → `D:\programs\ComfyUI\` (SHA-256 сверен, 4.25 ГБ); сервер/UI/API/workflow без моделей/CUDA проверены; **весов моделей нет** |
 | Git / remote | `origin` = `alfuwerce-art/factoria.git`; рабочая ветка `factory/work`; `main` не изменяется исполнителем |
 | Режим DSH | **CubeGame Factory** (`cubegame-factory`) — выбирается при создании нового чата |
 
@@ -47,9 +47,11 @@ manifests\                                 схемы входов/выходо�
 samples\original_test_assets\              собственные/открытые тестовые меши
 samples\imported_results\                  результаты импорта
 workflows\                                 workflow JSON (с учётом лицензий)
-scripts\                                   только диагностика и запуск smoke tests
-outputs\{blender,rigging,animation,reports}
+scripts\                                   только диагностика и запуск smoke tests (blender\, comfyui\)
+outputs\{blender,rigging,animation,comfyui,reports}
 logs\                                      сырые доказательства запусков
+references\cubegame-m1\                    исторические материалы исследований M1 (справка)
+workflows\                                 workflow JSON (с учётом лицензий)
 ```
 
 ---
@@ -68,6 +70,29 @@ py -0p
 ```
 
 Ожидаемый результат на этой машине: Python 3.13.14, Git 2.55.0, VS Code 1.145.2, Unity 6000.3.27f2/6000.6.7f1, Ollama 0.40.10, RTX 4060 Laptop 8188 MiB; Blender появился после PREP-01 в `D:\programs\Blender\5.2\`.
+
+---
+
+## Как воспроизвести PREP-03 (ComfyUI)
+
+```powershell
+# 1. Запуск ComfyUI + API smoke + замеры RAM/VRAM (GPU, резерв 5 ГБ из 8 ГБ VRAM)
+powershell -NoProfile -ExecutionPolicy Bypass `
+    -File "D:\Projects\CubeGame Factory\scripts\comfyui\prep03_run_smoke.ps1"
+
+# 2. То же в RAM-first / CPU-режиме (VRAM не используется)
+powershell -NoProfile -ExecutionPolicy Bypass `
+    -File "D:\Projects\CubeGame Factory\scripts\comfyui\prep03_run_smoke.ps1" -CpuMode
+
+# 3. Только CUDA-проверка встроенного torch (без сервера и моделей)
+& 'D:\programs\ComfyUI\python_embeded\python.exe' -s `
+    "D:\Projects\CubeGame Factory\scripts\comfyui\prep03_cuda_sanity.py"
+```
+
+Ожидаемый итог: `PREP03_RESULT=PASS`, отчёты `outputs\reports\prep03_comfyui_smoke_gpu_reserve5.json`
+и `..._cpu.json`, PNG `outputs\comfyui\prep03_smoke_from_api.png` (96×96), логи `logs\PREP-03_*`.
+Граф для повторного запуска: `workflows\comfyui_prep03_smoke_api.json`.
+Консольный запуск вручную: `D:\programs\ComfyUI\run_nvidia_gpu.bat`; UI — `http://127.0.0.1:8188`.
 
 ---
 
@@ -121,5 +146,7 @@ $env:BLENDER_USER_CONFIG = 'D:\Projects\CubeGame Factory\environments\blender\co
 ## Следующий шаг
 
 **PREP-02:** round-trip форматов на собственной модели — `.blend` / `.fbx` / `.glb`: импорт и экспорт,
-масштаб и оси, материалы, дерево костей, веса, анимационный action; таблица `INPUT→OUTPUT` с потерями.
-Минимальный FBX-экспорт уже проверен в PREP-01, но полный обмен форматами — ещё нет.
+масштаб и оси, материалы, дерево костей, веса, анимационный action; таблица `INPUT→OUTPUT` с потерями,
+и отдельно — как получить deform-only скелет вместо 706-костного control rig.
+Минимальный FBX-экспорт уже проверен в PREP-01, ComfyUI-инфраструктура готова (PREP-03 `PARTIAL`),
+но полный обмен форматами — ещё нет.

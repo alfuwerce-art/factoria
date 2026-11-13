@@ -10,6 +10,8 @@
 | # | Дата | Инструмент | Версия | Источник | Лицензия | Куда | Причина | Результат |
 |---|---|---|---|---|---|---|---|---|
 | 1 | 2026-11-13 | **Blender** | **5.2.4 LTS** (build cd5dc428cce1, 2026-11-10) | `https://download.blender.org/release/Blender5.2/blender-5.2.4-windows-x64.zip` (405 779 142 Б) + `.sha256` | GPL-2.0-or-later | `D:\programs\Blender\5.2\` (портативно, zip) | ядро конвейера: геометрия, armature, skinning, анимация, CLI, FBX | **INSTALLED + SMOKE_PASS** — SHA-256 совпал, `--version` OK, GUI OK, headless OK, Rigify+skinning+FBX проверены (`logs\PREP-01_*`) |
+| 2 | 2026-11-13 | **ComfyUI** (portable, NVIDIA) | **0.45.0** (torch 2.14.1+cu130, embedded python 3.13.14) | `https://github.com/Comfy-Org/ComfyUI/releases/download/v0.45.0/ComfyUI_windows_portable_nvidia.7z` (2 071 479 423 Б) | GPL-3.0 | `D:\programs\ComfyUI\` (portable, 4.25 ГБ, 63 891 файл) | AI-инфраструктура для будущих шагов (PREP-03/05): запуск локальных моделей и workflows | **INSTALLED + SMOKE_PASS (runtime/api)** — SHA-256 совпал, сервер стартует, UI 200, workflow без моделей выполнен, PNG сохранён (`logs\PREP-03_*`); AI-модели НЕ проверялись |
+| 3 | 2026-11-13 | **7-Zip (7zr.exe)** | 26.04 (x86 CLI) | `https://www.7-zip.org/a/7zr.exe` (602 624 Б) | Public domain | `D:\programs\_installers\7zr.exe` (один файл, без установки, PATH не менялся) | распаковка официального `.7z` ComfyUI (системного 7-Zip нет, WinRAR-триал не используется) | **INSTALLED** — распаковал архив, `Everything is Ok` |
 
 **Проверка целостности загрузки:**
 
@@ -24,6 +26,26 @@
 | PATH | **не изменялся** (проверено `Machine`/`User` PATH — Blender отсутствует) |
 | Изоляция конфигурации | `BLENDER_USER_CONFIG=D:\Projects\CubeGame Factory\environments\blender\config` |
 | Установщик файла | `D:\programs\_installers\` (локально, в git не попадает: `*.zip`) |
+
+### PREP-03 — ComfyUI 0.45.0 portable
+
+| Параметр | Значение |
+|---|---|
+| Файл | `ComfyUI_windows_portable_nvidia.7z`, 2 071 479 423 Б (1.93 ГБ) |
+| SHA-256 опубликованный (release asset digest) | `60c12e8c7af778047ad0413722dd3dc0f6ca773a41cbf5cb229ee9bc92c44a6f` |
+| SHA-256 вычисленный | `60c12e8c7af778047ad0413722dd3dc0f6ca773a41cbf5cb229ee9bc92c44a6f` |
+| Совпадение | **ДА** |
+| Загрузка | 2094 с (~34 мин, GitHub release) |
+| Распаковка | `7zr.exe x ... -oD:\programs\_comfy_extract` → 120.6 с, «Everything is Ok», 63 142 файла, 4.55 ГБ распаковано |
+| Итоговый путь | `D:\programs\ComfyUI\` (4.25 ГБ, 63 891 файл) |
+| Изоляция | собственный `python_embeded\python.exe` 3.13.14; системный Python и Blender не затронуты; PATH не менялся |
+| GPU | `torch 2.14.1+cu130`, CUDA runtime 13.0, `cuda_available=True`, RTX 4060 Laptop (capability 8.9), 8187.5 МБ VRAM |
+| CUDA Toolkit | **не устанавливался** (не требуется: torch wheel несёт CUDA runtime) |
+| Веса моделей | **0 Б** — не скачивались; `models\checkpoints` пуст (это ожидаемо и не является ошибкой) |
+| Запуск | `run_nvidia_gpu.bat` или напрямую `python_embeded\python.exe -s ComfyUI\main.py --windows-standalone-build --port 8188 --disable-auto-launch --reserve-vram 5` |
+| CPU-режим | `advanced\run_cpu.bat` / `--cpu` (проверен, работает) |
+| Обновление | `update\update_comfyui.bat` (не запускалось) |
+| Версии компонентов | ComfyUI 0.45.0, frontend 1.58.5, templates 0.11.105, comfy-kitchen 0.2.41 |
 
 ---
 
@@ -82,11 +104,11 @@
 | PREP-01 | **Rigify** | **ВЫПОЛНЕНО:** встроенный аддон 0.6.10 включён через `bpy.ops.preferences.addon_enable`, риг сгенерирован на собственной фигуре, skinning и контрольные позы проверены | — |
 | PREP-01 | **venv** | **НЕ ВЫПОЛНЕНО ОСОЗНАННО:** Blender несёт собственный Python 3.13.13; внешний Python-раннер появится только на PREP-02 (`scripts\` сейчас — только Blender-диагностика). Пустой venv не создавался, чтобы не плодить артефакты | при первом внешнем Python-скрипте |
 | PREP-02 | обмен форматами | `.blend`/`.fbx`/`.glb` round-trip на собственном меше; в PREP-01 уже проверен минимальный FBX-экспорт + обратный импорт | следующий шаг |
-| PREP-03 | **ComfyUI** | получить фактический путь у пользователя; при отсутствии — согласовать установку | блокер: установка не найдена |
+| PREP-03 | **ComfyUI** | **ВЫПОЛНЕНО (установка + runtime smoke):** официальный portable 0.45.0 NVIDIA, SHA-256 сверен, распакован в `D:\programs\ComfyUI\`; сервер, UI, API-workflow без моделей и CUDA-вычисления проверены | AI-модели и генерация 3D — отдельный согласованный эксперимент |
 | PREP-05 | **Cascadeur** | изучить лицензию и системные требования; установка только при приемлемых условиях | после проверки лицензии |
 | — | n8n | не устанавливать | требуется доказательство преимущества |
 
 **Согласования, которые нужны от пользователя:**
-1. Фактический путь ComfyUI (или решение, что его нужно установить заново).
-2. URL отдельного GitHub-репозитория Factory (публикация `factory/work`).
-3. Позже: любые AI-веса (размер, лицензия, VRAM) — отдельно.
+1. URL отдельного GitHub-репозитория Factory — **ПОЛУЧЕН** (`alfuwerce-art/factoria`), `factory/work` синхронизирована.
+2. Любая AI-модель для ComfyUI: источник, размер, лицензия, требуемая VRAM, качество — до скачивания.
+3. Cascadeur (лицензия/тариф и ограничения экспорта FBX) — до установки.

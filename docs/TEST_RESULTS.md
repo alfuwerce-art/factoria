@@ -195,3 +195,95 @@ note: |
   импорт в пустую сцену (см. выше). PREP-02 должен закрыть полный round-trip
   .blend/.fbx/.glb с масштабом, осями, материалами и анимационным action.
 ```
+
+---
+
+## PREP-03 — ComfyUI и локальная AI-инфраструктура
+
+```yaml
+id: PREP-03
+status: PARTIAL        # установка и API-прогон доказаны; AI-модели и генерация 3D НЕ проверены
+machine: WINDOWS_11
+software: ComfyUI 0.45.0 (portable, official Comfy-Org release)
+version: 0.45.0; python 3.13.14 (embedded); torch 2.14.1+cu130; CUDA runtime 13.0
+source_url: https://github.com/Comfy-Org/ComfyUI/releases/download/v0.45.0/ComfyUI_windows_portable_nvidia.7z
+license: GPL-3.0 (LICENSE в поставке; подтверждено по файлу репозитория v0.45.0)
+install_location: D:\programs\ComfyUI  (portable, embedded python, 4.25 ГБ, 63 891 файл)
+download_size: 2 071 479 423 Б (1.93 ГБ, .7z)
+download_sha256: 60c12e8c7af778047ad0413722dd3dc0f6ca773a41cbf5cb229ee9bc92c44a6f
+sha256_verified: YES (совпало с digest, опубликованным в GitHub release assets)
+sample_asset: собственный минимальный граф EmptyImage → SaveImage (без чекпоинтов и весов)
+command: |
+  powershell -NoProfile -ExecutionPolicy Bypass -File "D:\Projects\CubeGame Factory\scripts\comfyui\prep03_run_smoke.ps1"
+  powershell -NoProfile -ExecutionPolicy Bypass -File "...\prep03_run_smoke.ps1" -CpuMode
+  # внутри: python_embeded\python.exe -s ComfyUI\main.py --windows-standalone-build --port 8188 `
+  #            --disable-auto-launch --reserve-vram 5    (или --cpu)
+input: |
+  график из встроенных нод: EmptyImage(width=96, height=96, color=0x00C8FF) → SaveImage
+  API-скрипт: scripts\comfyui\prep03_comfyui_smoke.py (только стандартная библиотека Python)
+output: |
+  outputs\comfyui\prep03_smoke_from_api.png                (96×96 PNG, скачан через /view)
+  outputs\reports\prep03_comfyui_smoke_gpu_reserve5.json   (прогон GPU, reserve-vram 5)
+  outputs\reports\prep03_comfyui_smoke_cpu.json            (прогон CPU)
+  logs\PREP-03_run_gpu_2026-11-13.txt / PREP-03_run_cpu_2026-11-13.txt
+  logs\PREP-03_cuda_sanity_2026-11-13.txt                  (matmul на CUDA встроенным torch)
+  workflows\comfyui_prep03_smoke_api.json                  (граф для повторного запуска)
+  серверная сторона: D:\programs\ComfyUI\ComfyUI\output\factoria_prep03_smoke_0000N_.png
+checks:
+  - name: Реальный запуск ComfyUI (GPU, --reserve-vram 5)
+    result: PASS  (тёплый старт 10.8–11.8 с; первый холодный старт ~146 с)
+  - name: Веб-интерфейс отдаётся
+    result: PASS  (GET / → HTTP 200, 19 885 Б HTML, ComfyUI 0.45.0)
+  - name: Python и зависимости рабочие
+    result: PASS  (embedded python 3.13.14, torch 2.14.1+cu130, cuda_available=True, RTX 4060 Laptop, capability 8.9)
+  - name: Минимальный workflow выполнен (без моделей)
+    result: PASS  (prompt_id получен, /history → status_str=success, completed=true, 1.0 с)
+  - name: Результат сохранён и скачан
+    result: PASS  (96×96 PNG, 504 Б, /view 200; файл также есть в ComfyUI\output)
+  - name: API-механизм (POST /prompt, /history, /view, /queue)
+    result: PASS  (очередь пуста после выполнения)
+  - name: CUDA-вычисления встроенным torch
+    result: PASS  (matmul 2048×2048 за 0.12 с, пик allocated 56.1 МБ / reserved 68 МБ)
+  - name: Генерация 3D-модели
+    result: NOT_TESTED  (требуются веса AI-моделей — не скачивались без согласования)
+issues:
+  - первый холодный старт ~146 с (миграция SQLite-БД ComfyUI + скан ассетов), тёплый ~11 с
+  - nvidia-smi на Windows/WDDM не отдаёт память процесса (compute-apps = 0) — VRAM мерилась по всей карте
+  - граф без моделей не создаёт CUDA-тензоров: torch_vram_total = 0, прирост VRAM ≈ 80–90 МБ (инициализация)
+next_action: >
+  PREP-02 (форматы/экспорт) — следующий обязательный шаг. Для PREP-03 дальше требуется
+  согласование конкретной AI-модели (источник, размер, лицензия, VRAM) и только затем
+  тест реальной генерации/переработки геометрии.
+```
+
+**Измеренные величины (2026-11-13)**
+
+| Метрика | GPU (`--reserve-vram 5`) | CPU (`--cpu`) |
+|---|---|---|
+| Готовность сервера (тёплый старт) | 10.8–11.8 с | 10.7–11.8 с |
+| Выполнение workflow | 1.0 с | 1.0–1.02 с |
+| Пиковый рабочий набор процесса ComfyUI | **972–973 МБ** | **858–860 МБ** |
+| Свободная RAM до / минимум во время теста | 19.37 → 18.43 ГБ | 19.41 → 18.52 ГБ |
+| Занятая VRAM всей карты до / пик | 1350 → 1436 MiB (**+86 MiB**) | 1348 → 1355 MiB (+7 MiB, шум) |
+| RAM после теста | 19.45 ГБ | 19.43 ГБ |
+| Общее время прогона (скрипт) | 14.4–15.1 с | 13.4–14.5 с |
+
+**Карточка памяти локального AI (§4.1 AGENTS.md) — что измерено и что нет**
+
+| Параметр | Факт |
+|---|---|
+| Название / версия | ComfyUI 0.45.0 portable NVIDIA (torch 2.14.1+cu130, CUDA 13.0) |
+| Источник / лицензия | официальный GitHub release Comfy-Org/ComfyUI v0.45.0; GPL-3.0 |
+| Вес / диск | архив 1.93 ГБ; установлено 4.25 ГБ; **весов моделей 0 Б** (не скачивались) |
+| Настройки запуска | `--reserve-vram 5` (резерв 5 ГБ из 8 ГБ VRAM → ComfyUI ≈ 3 ГБ), `--disable-auto-launch`, порт 8188; CPU-режим `--cpu` |
+| RAM / VRAM | пик RAM процесса ≈ 0.97 ГБ; прирост VRAM ≈ 86 МБ на инициализацию; реальная нагрузка моделью **не измерена** |
+| Время | холодный старт 146 с, тёплый 11 с, smoke-workflow 1.0 с |
+| Выход / качество | PNG 96×96 (цвет 0x00C8FF) — доказан runtime, **не** качество генерации |
+| Проблемы | нет OOM/подкачки; WDDM ограничивает per-process VRAM-метрику |
+| Статус | **PARTIAL** — инфраструктура готова, пригодность AI-моделей не проверена |
+
+**Чего этот тест НЕ доказывает:** способность генерировать 3D-модели, качество и лицензионную
+чистоту AI-выходов, поведение VRAM под реальными моделями (SD/3D/motion), скорость на 8 ГБ VRAM,
+пригодность для стиля CubeGame. Успешный API-прогон — это только «сервер и конвейер запускаются».
+
+---
