@@ -56,6 +56,25 @@ for ($i = 0; $i -lt $Connections; $i++) {
 }
 
 $sw = [Diagnostics.Stopwatch]::StartNew()
+
+# Recover from an interrupted run: tails left by the previous round are appended to
+# their parts before any new request, so no downloaded byte is ever thrown away.
+foreach ($p in $parts) {
+    $tail = "$($p.Path).tail"
+    if ((Test-Path $tail) -and ((Get-Item $tail).Length -gt 0)) {
+        $have = if (Test-Path $p.Path) { (Get-Item $p.Path).Length } else { 0 }
+        if ($have + (Get-Item $tail).Length -le $p.Size) {
+            $fsA = [System.IO.File]::Open($p.Path, [System.IO.FileMode]::Append, [System.IO.FileAccess]::Write)
+            try {
+                $bytes = [System.IO.File]::ReadAllBytes($tail)
+                $fsA.Write($bytes, 0, $bytes.Length)
+            } finally { $fsA.Dispose() }
+            "recovered_tail part=$($p.Index) bytes=$((Get-Item $tail).Length)"
+        }
+        Remove-Item $tail -Force
+    }
+}
+
 for ($round = 1; $round -le $MaxRounds; $round++) {
     $pending = @($parts | Where-Object {
             -not ((Test-Path $_.Path) -and ((Get-Item $_.Path).Length -eq $_.Size))
@@ -65,12 +84,34 @@ for ($round = 1; $round -le $MaxRounds; $round++) {
     "round=$round pending_parts=$($pending.Count)/$($parts.Count) elapsed_s=$([math]::Round($sw.Elapsed.TotalSeconds,0))"
     $procs = @()
     foreach ($p in $pending) {
+        # Byte-level resume inside a part: keep the already downloaded prefix and fetch
+        # only the missing tail into <part>.tail (curl cannot append to an existing file).
+        $have = 0
+        if (Test-Path $p.Path) { $have = (Get-Item $p.Path).Length }
+        if ($have -gt $p.Size) { Remove-Item $p.Path -Force; $have = 0 }
+        $tail = "$($p.Path).tail"
+        if (Test-Path $tail) { Remove-Item $tail -Force }
+        if ($have -eq $p.Size) { continue }
+        $rangeStart = $p.Start + $have
+        $out = if ($have -gt 0) { $tail } else { $p.Path }
         $procs += Start-Process -FilePath 'curl.exe' -PassThru -WindowStyle Hidden -ArgumentList @(
             '-L', '--fail', '--silent', '--show-error',
             '--speed-limit', '1024', '--speed-time', '60', '--max-time', '3600',
-            '-r', "$($p.Start)-$($p.End)", '-o', $p.Path, $Url)
+            '-r', "$rangeStart-$($p.End)", '-o', $out, $Url)
     }
     foreach ($pr in $procs) { $pr.WaitForExit() }
+    # merge tails into their parts, then report how many parts are complete
+    foreach ($p in $pending) {
+        $tail = "$($p.Path).tail"
+        if ((Test-Path $tail) -and ((Get-Item $tail).Length -gt 0)) {
+            $fsA = [System.IO.File]::Open($p.Path, [System.IO.FileMode]::Append, [System.IO.FileAccess]::Write)
+            try {
+                $bytes = [System.IO.File]::ReadAllBytes($tail)
+                $fsA.Write($bytes, 0, $bytes.Length)
+            } finally { $fsA.Dispose() }
+            Remove-Item $tail -Force
+        }
+    }
     $done = @($parts | Where-Object { (Test-Path $_.Path) -and ((Get-Item $_.Path).Length -eq $_.Size) }).Count
     "round=$round complete_parts=$done/$($parts.Count) elapsed_s=$([math]::Round($sw.Elapsed.TotalSeconds,0))"
 }
