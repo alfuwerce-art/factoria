@@ -73,6 +73,31 @@ py -0p
 
 ---
 
+## Как воспроизвести ORC-02 (unattended pipeline на реальном Orc)
+
+```powershell
+# Одна команда: реальный источник CubeGame читается read-only, результат — в Factoria
+python scripts\orc02\run_orc02.py --config scripts\orc02\configs\orc_profile.json `
+    --out outputs\prototypes\orc_02\run1
+
+# Детерминизм: повторный прогон даёт байт-идентичный GLB
+python scripts\orc02\run_orc02.py --out outputs\prototypes\orc_02\run2
+
+# Изменённая детализация (проверка, что конфиг влияет на геометрию)
+python scripts\orc02\run_orc02.py --out outputs\prototypes\orc_02\alt --detail-scale 0.5
+
+# Blender-валидация (headless): .blend, GLB round-trip, 3 вида
+$env:BLENDER_USER_CONFIG="D:\Projects\CubeGame Factory\environments\blender\config"
+& 'D:\programs\Blender\5.2\blender.exe' --background --factory-startup --python-exit-code 1 `
+    --python "D:\Projects\CubeGame Factory\scripts\blender\orc02_validate.py" -- --run "outputs\prototypes\orc_02\run1"
+```
+
+Ожидаемый итог: `ORC02_OK … modules=16 boxes=487`, `ORC02_VALIDATION=PASS`, каталог
+`outputs\prototypes\orc_02\run1\` с GLB, `descriptor.json`, `validation.json`, `.blend` и тремя PNG.
+**Важно:** исходный Alpha-контент read-only и в git не публикуется; результат — `PARTIAL`
+(см. `docs/tasks/ORC02_RUN_REPORT.md`), визуальной приёмки нет.
+
+---
 ## Как воспроизвести PREP-03 (ComfyUI)
 
 ```powershell
