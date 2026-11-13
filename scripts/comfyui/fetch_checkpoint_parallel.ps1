@@ -1,25 +1,42 @@
-# FACTORIA / ComfyUI - restartable parallel download of large model files.
+# FACTORIA / ComfyUI - restartable, watchdog-protected parallel downloader.
 #
-# Why: huggingface.co throttles a single TCP stream on this host to ~20-60 KB/s; 12 parallel
-# range requests reach ~0.9-1.0 MB/s. Because a 7 GB file then takes hours, the transfer must
-# survive restarts: every byte range is downloaded into "<target>.parts\part_<i>.bin" and the
-# parts directory is REUSED on the next run, so a re-run never re-downloads finished ranges.
+# Diagnosis that led to this version (COMFY-STYLE-04 recovery, 2026-11-14):
+#   * HuggingFace CDN sometimes accepts a TCP connection and then never sends body bytes
+#     ("idle established"). Observed: 6 of 12 range connections ESTABLISHED to the HF edge,
+#     0 bytes read for >40 min, while a fresh single range request to the SAME file returned
+#     HTTP 206 with data within seconds.
+#   * curl without --connect-timeout and with a 1-hour --max-time waits forever on such a
+#     connection, and --speed-limit/--speed-time does not fire before the transfer starts.
+#   * The previous version waited for ALL connections (WaitForExit) before doing anything,
+#     so a single hung connection froze the whole file.
 #
-# Ranges are deterministic: they are computed over the WHOLE file with a fixed chunk size
-# (ceil(total/Connections)), independent of what is already on disk. Only when every part is
-# complete is the target assembled (write to <target>.new, then replace) and verified by SHA-256.
+# What this version does:
+#   * Range support is verified up front (GET bytes 0-0 -> expect 206 + content-range).
+#   * A per-connection watchdog kills only the stalled curl (no output growth for -StallSeconds)
+#     and the part is retried with limited exponential backoff.
+#   * Every finished/partial part is kept; nothing is re-downloaded (byte-level resume via
+#     <part>.tail), completed parts are validated by exact size before reuse.
+#   * Progress lines show downloaded MB, rate, ETA and the time of the last received data.
+#   * Default parallelism lowered to 4 connections (12 was measurably unstable on this host).
+#   * Final assembly is verified by SHA-256; the target file is replaced atomically.
 #
 # Usage:
 #   powershell -ExecutionPolicy Bypass -File fetch_checkpoint_parallel.ps1 `
-#       -Url <url> -Target <file> -ExpectedSha256 <hex> -TotalBytes <n> [-Connections 12]
+#       -Url <url> -Target <file> -ExpectedSha256 <hex> -TotalBytes <n> [-Connections 4]
 param(
     [Parameter(Mandatory = $true)][string]$Url,
     [Parameter(Mandatory = $true)][string]$Target,
     [Parameter(Mandatory = $true)][string]$ExpectedSha256,
     [Parameter(Mandatory = $true)][int64]$TotalBytes,
-    [int]$Connections = 12,
-    [int]$MaxRounds = 40,
-    [int]$MaxSeconds = 0
+    [int]$Connections = 4,
+    [int]$MaxConcurrent = 0,
+    [int]$ConnectTimeoutSeconds = 20,
+    [int]$AttemptMaxSeconds = 1800,
+    [int]$StallSeconds = 60,
+    [int]$MaxAttempts = 6,
+    [int]$BackoffMaxSeconds = 30,
+    [int]$ProgressEverySeconds = 30,
+    [switch]$SkipRangeCheck
 )
 
 $ErrorActionPreference = 'Stop'
@@ -28,15 +45,67 @@ New-Item -ItemType Directory -Force -Path $targetDir | Out-Null
 $partsDir = "$Target.parts"
 New-Item -ItemType Directory -Force -Path $partsDir | Out-Null
 
-# already finished?
+function Get-LogStamp { (Get-Date).ToString('HH:mm:ss') }
+
+function Test-RangeSupport {
+    param([string]$U, [int]$TimeoutSec)
+    $probe = Join-Path $env:TEMP ("range_probe_" + [guid]::NewGuid().ToString('N') + ".bin")
+    $hdr = "$probe.hdr"
+    try {
+        & curl.exe -sL --fail --show-error --connect-timeout $TimeoutSec --max-time ($TimeoutSec * 3) `
+            -r 0-0 -o $probe -D $hdr $U 2>$null | Out-Null
+        if (-not (Test-Path $hdr)) { return $false }
+        $text = Get-Content $hdr -Raw
+        $has206 = $text -match 'HTTP/\d\.\d 206'
+        $hasRange = $text -match 'content-range:\s*bytes\s+0-0/\d+'
+        return ($has206 -and $hasRange)
+    } catch { return $false } finally {
+        Remove-Item $probe, $hdr -Force -ErrorAction SilentlyContinue
+    }
+}
+
+function Get-PartBytes {
+    param($Part)
+    $n = 0
+    if (Test-Path $Part.Path) { $n += (Get-Item $Part.Path).Length }
+    $tail = "$($Part.Path).tail"
+    if (Test-Path $tail) { $n += (Get-Item $tail).Length }
+    return [int64]$n
+}
+
+function Merge-Tail {
+    param($Part)
+    $tail = "$($Part.Path).tail"
+    if ((Test-Path $tail) -and ((Get-Item $tail).Length -gt 0)) {
+        $have = if (Test-Path $Part.Path) { (Get-Item $Part.Path).Length } else { 0 }
+        $tailLen = (Get-Item $tail).Length
+        if (($have + $tailLen) -le $Part.Size) {
+            $fsA = [System.IO.File]::Open($Part.Path, [System.IO.FileMode]::Append, [System.IO.FileAccess]::Write)
+            try {
+                $bytes = [System.IO.File]::ReadAllBytes($tail)
+                $fsA.Write($bytes, 0, $bytes.Length)
+            } finally { $fsA.Dispose() }
+            "[$(Get-LogStamp)] merged_tail part=$($Part.Index) bytes=$tailLen"
+        }
+        Remove-Item $tail -Force -ErrorAction SilentlyContinue
+    }
+}
+
+# ---- already complete? ----------------------------------------------------
 if ((Test-Path $Target) -and (Get-Item $Target).Length -eq $TotalBytes) {
     $sha = (Get-FileHash -Path $Target -Algorithm SHA256).Hash.ToLower()
-    if ($sha -eq $ExpectedSha256.ToLower()) {
-        "already_complete=true sha256=$sha"
-        "SHA256_OK"
-        exit 0
-    }
+    if ($sha -eq $ExpectedSha256.ToLower()) { "already_complete=true sha256=$sha"; "SHA256_OK"; exit 0 }
     "existing_target_sha_mismatch -> rebuilding from parts"
+}
+
+# ---- range support check --------------------------------------------------
+if (-not $SkipRangeCheck) {
+    "[$(Get-LogStamp)] checking HTTP Range support ..."
+    if (-not (Test-RangeSupport -U $Url -TimeoutSec $ConnectTimeoutSeconds)) {
+        "RANGE_NOT_SUPPORTED_OR_PROBE_FAILED - refusing parallel mode (server must answer 206 + content-range)"
+        exit 8
+    }
+    "[$(Get-LogStamp)] range support OK (206 + content-range)"
 }
 
 $chunk = [int64][math]::Ceiling($TotalBytes / $Connections)
@@ -54,87 +123,127 @@ for ($i = 0; $i -lt $Connections; $i++) {
         Path  = (Join-Path $partsDir "part_$i.bin")
     }
 }
+"[$(Get-LogStamp)] plan: $($parts.Count) parts, each $([math]::Round($chunk / 1MB, 0)) MB"
 
+# recover tails left by an interrupted run before anything else
+foreach ($p in $parts) { Merge-Tail $p }
+
+$attempts = @{}
+foreach ($p in $parts) { $attempts[$p.Index] = 0 }
 $sw = [Diagnostics.Stopwatch]::StartNew()
+$lastProgressPrint = (Get-Date).AddMinutes(-10)
+$lastDataAt = Get-Date
+$noGrowthRounds = 0
+$lastRateBytes = [int64](($parts | ForEach-Object { Get-PartBytes $_ } | Measure-Object -Sum).Sum)
+$lastRateAt = Get-Date
 
-# Recover from an interrupted run: tails left by the previous round are appended to
-# their parts before any new request, so no downloaded byte is ever thrown away.
-foreach ($p in $parts) {
-    $tail = "$($p.Path).tail"
-    if ((Test-Path $tail) -and ((Get-Item $tail).Length -gt 0)) {
-        $have = if (Test-Path $p.Path) { (Get-Item $p.Path).Length } else { 0 }
-        if ($have + (Get-Item $tail).Length -le $p.Size) {
-            $fsA = [System.IO.File]::Open($p.Path, [System.IO.FileMode]::Append, [System.IO.FileAccess]::Write)
-            try {
-                $bytes = [System.IO.File]::ReadAllBytes($tail)
-                $fsA.Write($bytes, 0, $bytes.Length)
-            } finally { $fsA.Dispose() }
-            "recovered_tail part=$($p.Index) bytes=$((Get-Item $tail).Length)"
-        }
-        Remove-Item $tail -Force
-    }
-}
-
-for ($round = 1; $round -le $MaxRounds; $round++) {
+while ($true) {
     $pending = @($parts | Where-Object {
-            -not ((Test-Path $_.Path) -and ((Get-Item $_.Path).Length -eq $_.Size))
+            (Get-PartBytes $_) -lt $_.Size
         })
-    if ($pending.Count -eq 0) { "round=$round ALL_PARTS_COMPLETE"; break }
-    if ($MaxSeconds -gt 0 -and $sw.Elapsed.TotalSeconds -gt $MaxSeconds) { "TIME_LIMIT_REACHED"; exit 7 }
-    "round=$round pending_parts=$($pending.Count)/$($parts.Count) elapsed_s=$([math]::Round($sw.Elapsed.TotalSeconds,0))"
-    $procs = @()
+    if ($pending.Count -eq 0) { "[$(Get-LogStamp)] ALL_PARTS_COMPLETE"; break }
+
+    $toLaunch = @()
     foreach ($p in $pending) {
-        # Byte-level resume inside a part: keep the already downloaded prefix and fetch
-        # only the missing tail into <part>.tail (curl cannot append to an existing file).
-        $have = 0
-        if (Test-Path $p.Path) { $have = (Get-Item $p.Path).Length }
-        if ($have -gt $p.Size) { Remove-Item $p.Path -Force; $have = 0 }
+        if ($attempts[$p.Index] -ge $MaxAttempts) {
+            "PART_GAVE_UP part=$($p.Index) attempts=$($attempts[$p.Index])"
+            continue
+        }
+        # finish the ranges that are closest to completion first
+        $toLaunch += $p
+    }
+    if ($toLaunch.Count -eq 0) { "INCOMPLETE all remaining parts exhausted attempts"; exit 7 }
+    if ($MaxConcurrent -le 0) { $MaxConcurrent = $Connections }
+    $toLaunch = @($toLaunch | Sort-Object { $_.Size - (Get-PartBytes $_) } | Select-Object -First $MaxConcurrent)
+    foreach ($p in $toLaunch) { $attempts[$p.Index]++ }
+
+    # limited exponential backoff only when the previous round produced no new bytes at all
+    if ($noGrowthRounds -gt 0) {
+        $backoff = [math]::Min([math]::Pow(2, $noGrowthRounds), $BackoffMaxSeconds)
+        "[$(Get-LogStamp)] no-progress backoff ${backoff}s (consecutive empty rounds: $noGrowthRounds)"
+        Start-Sleep -Seconds $backoff
+    }
+    $bytesBeforeRound = ($parts | ForEach-Object { Get-PartBytes $_ } | Measure-Object -Sum).Sum
+
+    $running = @()
+    foreach ($p in $toLaunch) {
+        $have = if (Test-Path $p.Path) { (Get-Item $p.Path).Length } else { 0 }
+        if ($have -gt $p.Size) { $have = 0 }           # never delete a part; restart only this range
         $tail = "$($p.Path).tail"
-        if (Test-Path $tail) { Remove-Item $tail -Force }
-        if ($have -eq $p.Size) { continue }
+        Remove-Item $tail -Force -ErrorAction SilentlyContinue
         $rangeStart = $p.Start + $have
         $out = if ($have -gt 0) { $tail } else { $p.Path }
-        $procs += Start-Process -FilePath 'curl.exe' -PassThru -WindowStyle Hidden -ArgumentList @(
+        $proc = Start-Process -FilePath 'curl.exe' -PassThru -WindowStyle Hidden -ArgumentList @(
             '-L', '--fail', '--silent', '--show-error',
-            '--speed-limit', '1024', '--speed-time', '60', '--max-time', '3600',
+            '--connect-timeout', "$ConnectTimeoutSeconds",
+            '--max-time', "$AttemptMaxSeconds",
             '-r', "$rangeStart-$($p.End)", '-o', $out, $Url)
+        $running += [pscustomobject]@{ Part = $p; Proc = $proc; LastBytes = (Get-PartBytes $p); LastChange = (Get-Date) }
     }
-    foreach ($pr in $procs) { $pr.WaitForExit() }
-    # merge tails into their parts, then report how many parts are complete
-    foreach ($p in $pending) {
-        $tail = "$($p.Path).tail"
-        if ((Test-Path $tail) -and ((Get-Item $tail).Length -gt 0)) {
-            $fsA = [System.IO.File]::Open($p.Path, [System.IO.FileMode]::Append, [System.IO.FileAccess]::Write)
-            try {
-                $bytes = [System.IO.File]::ReadAllBytes($tail)
-                $fsA.Write($bytes, 0, $bytes.Length)
-            } finally { $fsA.Dispose() }
-            Remove-Item $tail -Force
+    "[$(Get-LogStamp)] launched $($running.Count) connections (stall watchdog ${StallSeconds}s)"
+
+    # ---- watchdog loop: never wait for all blindly ----
+    while ($true) {
+        Start-Sleep -Seconds 3
+        $alive = 0
+        foreach ($r in $running) {
+            $r.Proc.Refresh()
+            $nowBytes = Get-PartBytes $r.Part
+            if ($nowBytes -gt $r.LastBytes) {
+                $r.LastBytes = $nowBytes
+                $r.LastChange = Get-Date
+                $lastDataAt = Get-Date
+            }
+            if (-not $r.Proc.HasExited) {
+                $idle = ((Get-Date) - $r.LastChange).TotalSeconds
+                if ($idle -gt $StallSeconds) {
+                    "[$(Get-LogStamp)] STALL part=$($r.Part.Index) idle=${StallSeconds}s -> killing this connection only"
+                    Stop-Process -Id $r.Proc.Id -Force -ErrorAction SilentlyContinue
+                } else { $alive++ }
+            }
         }
+        # progress line
+        if (((Get-Date) - $lastProgressPrint).TotalSeconds -ge $ProgressEverySeconds) {
+            $have = ($parts | ForEach-Object { Get-PartBytes $_ } | Measure-Object -Sum).Sum
+            # instantaneous rate over the last progress window (not the run average: resumed
+            # files already contain data, so total/elapsed would be meaningless)
+            $dtRate = ((Get-Date) - $lastRateAt).TotalSeconds
+            $rate = if ($dtRate -gt 0) { ($have - $lastRateBytes) / $dtRate } else { 0 }
+            if ($rate -lt 0) { $rate = 0 }
+            $lastRateBytes = $have
+            $lastRateAt = Get-Date
+            $left = $TotalBytes - $have
+            $eta = if ($rate -gt 0) { [math]::Round(($left / $rate) / 60, 0) } else { 'n/a' }
+            "[$(Get-LogStamp)] progress {0:N0}/{1:N0} MB ({2:N1}%) | {3:N0} KB/s | ETA {4} min | last data {5}" -f `
+                ($have / 1MB), ($TotalBytes / 1MB), (100 * $have / $TotalBytes), ($rate / 1KB), $eta, $lastDataAt.ToString('HH:mm:ss')
+            $lastProgressPrint = Get-Date
+        }
+        if ($alive -eq 0) { break }
+        if ($sw.Elapsed.TotalSeconds -gt (($TotalBytes / 1MB) * 60)) { "GLOBAL_TIMEOUT"; exit 7 }
     }
-    $done = @($parts | Where-Object { (Test-Path $_.Path) -and ((Get-Item $_.Path).Length -eq $_.Size) }).Count
-    "round=$round complete_parts=$done/$($parts.Count) elapsed_s=$([math]::Round($sw.Elapsed.TotalSeconds,0))"
+    foreach ($r in $running) { if (-not $r.Proc.HasExited) { Stop-Process -Id $r.Proc.Id -Force -ErrorAction SilentlyContinue } }
+    foreach ($r in $running) { Merge-Tail $r.Part }
+    $bytesAfterRound = ($parts | ForEach-Object { Get-PartBytes $_ } | Measure-Object -Sum).Sum
+    if (($bytesAfterRound - $bytesBeforeRound) -gt 0) { $noGrowthRounds = 0 } else { $noGrowthRounds++ }
+    $done = @($parts | Where-Object { (Get-PartBytes $_) -eq $_.Size }).Count
+    "[$(Get-LogStamp)] round done: complete_parts=$done/$($parts.Count) gained_MB=$([math]::Round(($bytesAfterRound - $bytesBeforeRound)/1MB,1)) elapsed_s=$([math]::Round($sw.Elapsed.TotalSeconds,0))"
 }
 
-$missing = @($parts | Where-Object { -not ((Test-Path $_.Path) -and ((Get-Item $_.Path).Length -eq $_.Size)) })
-if ($missing.Count -gt 0) {
-    "INCOMPLETE parts=$($missing.Count) - run the same command again to continue"
-    exit 7
-}
-
+# ---- assemble -------------------------------------------------------------
+foreach ($p in $parts) { Merge-Tail $p }
 $tmp = "$Target.new"
 if (Test-Path $tmp) { Remove-Item $tmp -Force }
 $fs = [System.IO.File]::Open($tmp, [System.IO.FileMode]::Create, [System.IO.FileAccess]::Write)
 try {
     foreach ($p in $parts) {
+        if ((Get-PartBytes $p) -ne $p.Size) { "PART_INCOMPLETE_AT_ASSEMBLY part=$($p.Index)"; exit 7 }
         $bytes = [System.IO.File]::ReadAllBytes($p.Path)
         $fs.Write($bytes, 0, $bytes.Length)
     }
 } finally { $fs.Dispose() }
 
 if ((Get-Item $tmp).Length -ne $TotalBytes) {
-    "ASSEMBLED_SIZE_MISMATCH got=$((Get-Item $tmp).Length) expected=$TotalBytes"
-    exit 3
+    "ASSEMBLED_SIZE_MISMATCH got=$((Get-Item $tmp).Length) expected=$TotalBytes"; exit 3
 }
 Move-Item -Path $tmp -Destination $Target -Force
 Remove-Item $partsDir -Recurse -Force -ErrorAction SilentlyContinue

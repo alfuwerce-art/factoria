@@ -462,8 +462,8 @@ next_action: >
 
 ```yaml
 id: COMFY-STYLE-04
-status: PARTIAL        # стек подготовлен, 4 workflow собраны и структурно проверены;
-                       # веса докачиваются, загрузка SDXL и пики RAM/VRAM НЕ проверены
+status: READY_FOR_OWNER_GENERATION_REVIEW  # все веса скачаны и сверены по SHA-256 (recovery 2026-11-14);
+                       # 6/7 workflow прошли серверную валидацию; генерация и пики — за владельцем
 machine: WINDOWS_11
 software: ComfyUI 0.45.0 + SDXL DreamShaper XL Turbo v2.1 + VoxelXL LoRA + SDXL IPAdapter + union ControlNet
 version: ComfyUI 0.45.0; python 3.13.14 embedded; torch 2.14.1+cu130; CUDA 13.0
@@ -481,11 +481,11 @@ download_sha256: |
   ipadapter  3f5062b8400c94b7159665b21ba5c62acdcd7682262743d7f2aefedef00e6581 (847 517 512 B)
   clipvision 6ca9667da1ca9e0b0f75e46bb030f7e011f44f86cbfb8d5a36590fcd7507b030 (2 528 373 448 B)
   controlnet a9e13fd61f3193887791c8a0dd07a07202174dc47d5ddaea94ea1344f07c7467 (2 512 030 408 B)
-sha256_verified: PENDING (загрузка идёт; скрипт проверяет SHA-256 по завершении каждого файла)
+sha256_verified: YES (все 6 файлов: независимая перепроверка Get-FileHash — размер и SHA-256 совпали)
 sample_asset: workflow DREAMSHAPER_XL_* + prompt_orc_v1.json; генерации не выполнялось
 command: |
-  # загрузка (идемпотентная, продолжается с места после прерывания)
-  powershell -NoProfile -ExecutionPolicy Bypass -File scripts\comfyui\fetch_style04_models.ps1 -Connections 12
+  # загрузка (идемпотентная, продолжается с места; watchdog + backoff, 4 соединения по умолчанию)
+  powershell -NoProfile -ExecutionPolicy Bypass -File scripts\comfyui\fetch_style04_models.ps1 -Connections 4
   # запуск SDXL
   scripts\comfyui\launch_dreamshaper_xl.bat          # --reserve-vram 1
   scripts\comfyui\launch_dreamshaper_xl_novram.bat   # --novram --reserve-vram 5
@@ -499,14 +499,14 @@ checks:
     result: PASS
   - name: SD 1.5 checkpoint и прежние workflow сохранены
     result: PASS  (v1-5-pruned-emaonly-fp16.safetensors на месте; workflows/factoria_voxel_style/* не изменялись)
-  - name: 4 workflow собраны и структурно проверены против /api/object_info
-    result: PASS  (BASE 8/9, PIXEL_STYLE 9/11, REFERENCE_LOCK 11/13, POSE_CONTROL 14/16 нод/связей)
+  - name: 4 workflow собраны и проверены против /api/object_info и серверным validate_prompt
+    result: PASS  (BASE, PIXEL_STYLE, POSE_CONTROL — PASS; REFERENCE_LOCK — только отсутствующий локальный референс)
   - name: Ноды LoRA/IPAdapter/ControlNet зарегистрированы
     result: PASS  (в /object_info присутствуют все используемые типы)
   - name: Целостность весов (SHA-256)
-    result: PENDING  (загрузка 13.7 ГБ при 0.4–1.0 МБ/с)
+    result: PASS  (6 файлов: DreamShaper XL, CLIP ViT-H, IPAdapter SDXL, ControlNet union, VoxelXL, ral-vxl)
   - name: Загрузка SDXL через torch/CUDA
-    result: NOT_TESTED  (не на чем: чекпоинт ещё качается)
+    result: NOT_TESTED  (чекпоинт готов, но прогон ещё не выполнялся)
   - name: Пики RAM/VRAM и время генерации
     result: NOT_TESTED  (на момент работ на машине работали ComfyUI владельца и Unity)
   - name: Художественная оценка стиля

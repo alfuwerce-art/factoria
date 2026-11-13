@@ -41,49 +41,14 @@
       "node_errors": null
     },
     "DREAMSHAPER_XL_PIXEL_STYLE.json": {
-      "status": "FAIL",
+      "status": "PASS",
       "prompt_nodes": 8,
-      "outputs": [],
-      "notes": [],
-      "error": {
-        "type": "prompt_outputs_failed_validation",
-        "message": "Prompt outputs failed validation",
-        "details": "",
-        "extra_info": {}
-      },
-      "node_errors": {
-        "6": {
-          "errors": [
-            {
-              "type": "value_not_in_list",
-              "message": "Value not in list",
-              "details": "lora_name: 'VoxelXL_v1.safetensors' not in ['ral-vxl.safetensors']",
-              "extra_info": {
-                "input_name": "lora_name",
-                "input_config": [
-                  [
-                    "ral-vxl.safetensors"
-                  ],
-                  {
-                    "tooltip": "The name of the LoRA."
-                  }
-                ],
-                "received_value": "VoxelXL_v1.safetensors"
-              }
-            }
-          ],
-          "dependent_outputs": [
-            "9"
-          ],
-          "class_type": "LoraLoader"
-        }
-      },
-      "needs_owner_action": [
-        "LoraLoader#6"
+      "outputs": [
+        "9"
       ],
-      "expected_gap_hint": {
-        "LoraLoader#6": ""
-      }
+      "notes": [],
+      "error": null,
+      "node_errors": null
     },
     "DREAMSHAPER_XL_POSE_CONTROL.json": {
       "status": "PASS",
@@ -135,5 +100,5 @@
       }
     }
   },
-  "ckpt_substituted": "v1-5-pruned-emaonly-fp16.safetensors"
+  "ckpt_substituted": null
 }
