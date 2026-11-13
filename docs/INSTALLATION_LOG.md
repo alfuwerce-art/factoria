@@ -41,7 +41,7 @@
 | Изоляция | собственный `python_embeded\python.exe` 3.13.14; системный Python и Blender не затронуты; PATH не менялся |
 | GPU | `torch 2.14.1+cu130`, CUDA runtime 13.0, `cuda_available=True`, RTX 4060 Laptop (capability 8.9), 8187.5 МБ VRAM |
 | CUDA Toolkit | **не устанавливался** (не требуется: torch wheel несёт CUDA runtime) |
-| Веса моделей | **0 Б** — не скачивались; `models\checkpoints` пуст (это ожидаемо и не является ошибкой) |
+| Веса моделей | Генеративные чекпоинты **не скачивались**: `models\checkpoints` пуст. В самой поставке есть 6 служебных TAESD-превью-кодеков (~14 МБ) — часть официального portable-архива |
 | Запуск | `run_nvidia_gpu.bat` или напрямую `python_embeded\python.exe -s ComfyUI\main.py --windows-standalone-build --port 8188 --disable-auto-launch --reserve-vram 5` |
 | CPU-режим | `advanced\run_cpu.bat` / `--cpu` (проверен, работает) |
 | Обновление | `update\update_comfyui.bat` (не запускалось) |
