@@ -28,7 +28,7 @@ command: |
   Get-ChildItem C:\,D:\ -Recurse -Depth 3..4 -Filter blender.exe / Cascadeur*.exe / *omfy*
   Get-NetTCPConnection -LocalPort 8188 / 11434
 input: локальная машина
-output: D:\Projects\CubeGameFactoryLab\logs\PREP-00_detection_2026-11-13.txt (177 строк, UTF-8)
+output: D:\Projects\CubeGame Factory\logs\PREP-00_detection_2026-11-13.txt (177 строк, UTF-8)
 checks:
   - name: Windows / CPU / RAM определены
     result: PASS

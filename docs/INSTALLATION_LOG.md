@@ -24,6 +24,8 @@
 | 2026-11-13 | Скопированы 4 документа из `D:\Projects\CubeGame Factory` | SHA-совпадение подтверждено для всех четырёх |
 | 2026-11-13 | Записан журнал обнаружения `logs/PREP-00_detection_2026-11-13.txt` | 177 строк, реальный вывод команд, UTF-8 |
 | 2026-11-13 | Локальный git-репозиторий инициализирован (без remote) | `main` = документация, `factory/work` = работа; `PUSH=NOT_CONFIGURED` |
+| 2026-11-13 | Рабочая папка сведена к `D:\Projects\CubeGame Factory` (перенос журналов, доказательств и git-истории; `CubeGameFactoryLab` → архив) | действующий каталог проекта |
+| 2026-11-13 | Установлен пользовательский режим DSH **CubeGame Factory** (`@local/cubegame-factory-preset`, база Standard) | `plugins\cubegame-factory-preset\`, строка `include:preset-cubegame-factory` активна |
 
 ---
 

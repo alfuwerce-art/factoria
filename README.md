@@ -15,6 +15,9 @@
 | ComfyUI | **НЕ НАЙДЕН** (расхождение с ТЗ) → нужен путь от пользователя |
 | Rigify | проверить после установки Blender |
 | Git / remote | локальный репозиторий; remote **не настроен** (`PUSH=NOT_CONFIGURED`) |
+| Режим DSH | **CubeGame Factory** (`cubegame-factory`) — выбирается при создании нового чата |
+
+**Начало работы в новом чате:** выберите режим **CubeGame Factory** и папку `D:\Projects\CubeGame Factory`; агент первым действием войдёт в неё и прочитает четыре документа в порядке AGENTS → 01 → 02 → 03.
 
 Подробности: [`docs/TOOL_INVENTORY.md`](docs/TOOL_INVENTORY.md), [`docs/TEST_RESULTS.md`](docs/TEST_RESULTS.md), [`docs/PIPELINE_GAPS.md`](docs/PIPELINE_GAPS.md).
 
