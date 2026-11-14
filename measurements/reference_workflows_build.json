@@ -1,0 +1,42 @@
+{
+  "object_info_source": "http://127.0.0.1:8190/object_info",
+  "config": "workflows/factory_reference/reference_characters_v1.json",
+  "workflows": {
+    "FACTORY_REFERENCE_IPADAPTER.json": {
+      "status": "PASS",
+      "nodes": 12,
+      "links": 13,
+      "problems": [],
+      "warnings": [
+        "CheckpointLoaderSimple#2: widget ckpt_name='sd_xl_base_1.0.safetensors' not in options (file not present locally yet)"
+      ]
+    },
+    "FACTORY_REFERENCE_CONTROLNET.json": {
+      "status": "PASS",
+      "nodes": 14,
+      "links": 16,
+      "problems": [],
+      "warnings": [
+        "CheckpointLoaderSimple#2: widget ckpt_name='sd_xl_base_1.0.safetensors' not in options (file not present locally yet)"
+      ]
+    },
+    "FACTORY_REFERENCE_IMG2IMG.json": {
+      "status": "PASS",
+      "nodes": 9,
+      "links": 11,
+      "problems": [],
+      "warnings": [
+        "CheckpointLoaderSimple#2: widget ckpt_name='sd_xl_base_1.0.safetensors' not in options (file not present locally yet)"
+      ]
+    },
+    "FACTORY_REFERENCE_IPADAPTER_CONTROLNET.json": {
+      "status": "PASS",
+      "nodes": 17,
+      "links": 20,
+      "problems": [],
+      "warnings": [
+        "CheckpointLoaderSimple#2: widget ckpt_name='sd_xl_base_1.0.safetensors' not in options (file not present locally yet)"
+      ]
+    }
+  }
+}

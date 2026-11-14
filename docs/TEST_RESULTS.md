@@ -630,3 +630,42 @@ next_action: >
 
 **Р§РµРіРѕ СЌС‚РѕС‚ С‚РµСЃС‚ РќР• РґРѕРєР°Р·С‹РІР°РµС‚:** РїСЂРёРіРѕРґРЅРѕСЃС‚СЊ РјРѕРґРµР»Рё РІ Unity, РєР°С‡РµСЃС‚РІРѕ СЂРёРіР°/Р°РЅРёРјР°С†РёРё
 (РёС… РЅРµС‚ РїРѕ СѓСЃР»РѕРІРёСЏРј Р·Р°РґР°С‡Рё), В«PRODUCTION_READYВ» Рё С…СѓРґРѕР¶РµСЃС‚РІРµРЅРЅСѓСЋ РїСЂРёС‘РјРєСѓ.
+
+---
+
+## COMFY-STYLE-07 — генерация персонажей по референсам (2026-11-14)
+
+``yaml
+id: COMFY-STYLE-07
+status: PARTIAL
+machine: WINDOWS_11
+software: ComfyUI 0.45.0 portable (python_embeded, torch 2.14.1+cu130)
+checkpoint_used: DreamShaperXL_Turbo_v2_1.safetensors (ВРЕМЕННО, 28 шагов / CFG 6.0)
+checkpoint_target: sd_xl_base_1.0.safetensors (openrail++, SHA-256 31e35c80…7e5b) — докачивается
+adapters: ip-adapter-plus_sdxl_vit-h (apache-2.0) + CLIP-ViT-H; controlnet-union-sdxl-1.0 (apache-2.0)
+inputs: references/characters_v1/human_warrior_reference_768x1024.png (из скриншота владельца), elf, dwarf
+command: |
+  python -s scripts\comfyui\reference_run_batch.py --url http://127.0.0.1:8190 --server-pid <pid> \
+    --config workflows/factory_reference/reference_characters_dreamshaper_turbo.json \
+    --matrix workflows/factory_reference/reference_test_matrix_v1.json \
+    --workflow-dir workflows/factory_reference --comfy-input D:\programs\ComfyUI\ComfyUI\input \
+    --out outputs/factory/reference_v1_turbo --report measurements/reference_batch_report_turbo_v1.json
+output: outputs/factory/reference_v1_turbo/*.png, contact_sheet.png, measurements/reference_batch_report_turbo_v1.json
+checks:
+  - name: Структурная валидация 4 графов
+    result: PASS (IPADAPTER / CONTROLNET / IMG2IMG / IPADAPTER_CONTROLNET)
+  - name: Plumbing 4 графов (турбо-чекпоинт, 640x832)
+    result: PASS (4/4, пик VRAM 7711 MB)
+  - name: Матрица человек-воин (10 прогонов, 768x1024, 28 шагов, CFG 6.0)
+    result: PASS 10/10, 247.7 с, пик VRAM 7743 MB, пик RSS 7490 MB
+  - name: Кросс-расовый тест (эльф/дворф, CN 0.6 и IPA 0.8)
+    result: PASS 4/4, 111.5 с
+  - name: Близость к референсу (эвристика L1/IoU)
+    result: img2img d0.25 L1 2.19 / IoU 0.992; ControlNet 0.6 IoU 0.535; IPAdapter 1.0 IoU 0.354
+issues:
+  - основной чекпоинт SDXL Base 1.0 ещё качается (65-75 %), финальный прогон не выполнен
+  - ControlNet Canny >= 0.6 на референсе человека даёт наложение второй фигуры
+  - IPAdapter style transfer теряет компактные пропорции CubeGame
+  - 1024x1024 на 8 ГБ VRAM не проверяется
+next_action: докачать SDXL Base 1.0, перезапустить ComfyUI, повторить тот же матрикс и сравнить контактные листы
+``

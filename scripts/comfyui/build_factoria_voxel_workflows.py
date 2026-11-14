@@ -90,7 +90,9 @@ class Graph:
     @staticmethod
     def _is_widget(spec) -> bool:
         t = spec[0]
-        if isinstance(t, list):          # COMBO
+        if isinstance(t, list):          # legacy COMBO layout
+            return True
+        if t == "COMBO":                 # newer object_info layout (options in spec[1])
             return True
         return t in {"INT", "FLOAT", "STRING", "BOOLEAN"}
 
@@ -99,6 +101,9 @@ class Graph:
         opts = spec[1] if len(spec) > 1 else {}
         if isinstance(t, list):
             return opts.get("default", t[0] if t else "")
+        if t == "COMBO":
+            options = opts.get("options") or []
+            return opts.get("default", options[0] if options else "")
         if t == "INT":
             return opts.get("default", 0)
         if t == "FLOAT":
@@ -252,9 +257,14 @@ class Graph:
             named = n.get("widgets_values_named", {})
             for group in ("required", "optional"):
                 for name, spec in (c["input"].get(group) or {}).items():
-                    if not self._is_widget(spec) or isinstance(spec[0], str):
+                    if not self._is_widget(spec):
                         continue
-                    options = spec[0]
+                    if isinstance(spec[0], list):
+                        options = spec[0]
+                    elif spec[0] == "COMBO":
+                        options = (spec[1] or {}).get("options") or []
+                    else:
+                        continue
                     val = named.get(name)
                     if options and val not in options:
                         problems.append(f"{n['type']}#{n['id']}: widget {name}={val!r} not in options")
@@ -509,9 +519,15 @@ def _validate_count(wf: dict, oi: dict):
         named = n.get("widgets_values_named", {})
         for group in ("required", "optional"):
             for name, spec in (c["input"].get(group) or {}).items():
-                if not Graph._is_widget(spec) or isinstance(spec[0], str):
+                if not Graph._is_widget(spec):
                     continue
-                if not spec[0] or named.get(name) in spec[0]:
+                if isinstance(spec[0], list):
+                    options = spec[0]
+                elif spec[0] == "COMBO":
+                    options = (spec[1] or {}).get("options") or []
+                else:
+                    continue
+                if not options or named.get(name) in options:
                     continue
                 msg = f"{n['type']}#{n['id']}: widget {name}={named.get(name)!r} not in options"
                 if name in file_widgets:

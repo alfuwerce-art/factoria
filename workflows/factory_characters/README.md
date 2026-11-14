@@ -15,6 +15,19 @@
 | `characters_v1.json` | конфиг персонажей (орк/человек/эльф), блоки промпта, ракурсы, сэмплинг |
 | `factory_test_matrix_v1.json` | список прогонов для `factory_run_batch.py` |
 
+### COMFY-STYLE-06 — SDXL Base 1.0 (V2)
+
+| Файл | Назначение |
+|---|---|
+| `FACTORY_CHARACTER_SDXL_BASE_V2.json` | SDXL Base 1.0 + `VoxelXL_v1`, 28 шагов, CFG 6.0, 768×1024, структурный промпт |
+| `FACTORY_CHARACTER_SDXL_BASE_V2_DIAG.json` | то же, но **короткий** промпт (один орк, без списков) — диагностика утечки «character sheet» |
+| `sdxl_base_v2.json` | конфиг V2: модель, сэмплинг-свип, промпты, negative |
+| `factory_test_matrix_v2.json` | матрикс: sampler/scheduler, CFG 5–7, LoRA 0.4/0.6/0.8, short-vs-long |
+
+Запуск V2: тот же `factoria_launch.ps1 -Preset xl -Port 8190 -DisableAssets -KeepRunning`, затем
+`factory_run_batch.py` с `--config sdxl_base_v2.json --matrix factory_test_matrix_v2.json`.
+RAL LoRA в V2 **не используется** (лицензия).
+
 ## Запуск
 
 ```powershell

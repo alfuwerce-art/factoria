@@ -71,3 +71,11 @@ outputs/comfyui/style_samples/
 
 # COMFY-STYLE-05: сгенерированные изображени€ (в т.ч. экспериментальные RAL) Ч только локально
 outputs/factory/characters/*.png
+
+# COMFY-STYLE-07: owner references (Unity screenshots) and derived cutouts - local only
+references/characters_v1/
+outputs/factory/reference_v1/*.png
+measurements/tmp_ref_plumbing/
+measurements/*.png
+outputs/factory/reference_*/
+measurements/tmp_v2_plumbing/
