@@ -79,3 +79,5 @@ measurements/tmp_ref_plumbing/
 measurements/*.png
 outputs/factory/reference_*/
 measurements/tmp_v2_plumbing/
+# COMFY-STYLE-08 — owner references and experimental images stay local
+outputs/factory/race_factory_v1/
