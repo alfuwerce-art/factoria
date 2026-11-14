@@ -91,7 +91,8 @@ def main() -> int:
     args.workflow_dir = os.path.abspath(args.workflow_dir)
     args.comfy = os.path.abspath(args.comfy)
     workflow_files = sorted(f for f in os.listdir(args.workflow_dir)
-                            if (f.startswith("FACTORIA_") or f.startswith("DREAMSHAPER_"))
+                            if (f.startswith("FACTORIA_") or f.startswith("DREAMSHAPER_")
+                                or f.startswith("FACTORY_"))
                             and f.endswith(".json"))
     if not workflow_files:
         print("no workflows found")

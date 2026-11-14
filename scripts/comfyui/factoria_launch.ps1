@@ -18,6 +18,7 @@ param(
     [int]$Port = 8188,
     [switch]$KeepRunning,
     [switch]$MeasureIdle,
+    [switch]$DisableAssets,
     [int]$IdleSeconds = 10,
     [string]$LogPrefix = 'COMFY-STYLE'
 )
@@ -54,6 +55,9 @@ $presetArgs = switch ($Preset) {
     'xl_safe' { @('--novram', '--reserve-vram', '5') }
 }
 $argList = @('-s', $mainPy, '--windows-standalone-build', '--disable-auto-launch', '--port', "$Port") + $presetArgs
+# A second copy of ComfyUI cannot share user\comfyui.db with the owner's instance:
+# --disable-assets gives this test instance a DB-free start.
+if ($DisableAssets) { $argList += '--disable-assets' }
 
 $env:PYTHONUTF8 = '1'
 $env:PYTHONIOENCODING = 'utf-8'

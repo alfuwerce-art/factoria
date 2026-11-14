@@ -41,6 +41,7 @@ except Exception:  # pragma: no cover
 
 try:
     import pynvml
+    pynvml.nvmlInit()
 except Exception:  # pragma: no cover
     pynvml = None
 

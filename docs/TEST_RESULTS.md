@@ -403,6 +403,52 @@ workflow на канвасе в браузере (проверена струк�
 
 ---
 
+## COMFY-STYLE-05 — Фабрика персонажей (главный граф + 3 режима + метрики)
+
+```yaml
+id: COMFY-STYLE-05
+status: READY_FOR_OWNER_VISUAL_REVIEW
+machine: WINDOWS_11
+software: ComfyUI 0.45.0 + DreamShaper XL Turbo + VoxelXL/ral-vxl LoRA + IPAdapter/ControlNet блоки
+version: checkpoint 4496b36d…5083, LoRA 7d9a5f11…8b5c и 9dc480ee…a25, IPAdapter 3f5062b8…6581, ControlNet a9e13fd6…7467
+source_url: локальные веса из COMFY-STYLE-04/04B (HF + Civitai), SHA-256 перепроверены 2026-11-14
+license: openrail++ (checkpoint), openrail (Fictiverse), RentCivit/no-derivatives (ral-vxl — только эксперимент)
+install_location: D:\programs\ComfyUI\ComfyUI\models\*
+sample_asset: 19 технических прогонов (орк/человек/эльф, 4 ракурса) + контактные листы
+command: |
+  scripts\comfyui\factoria_launch.ps1 -Preset xl -Port 8190 -DisableAssets -KeepRunning
+  python_embeded\python.exe -s scripts\comfyui\factory_run_batch.py --url http://127.0.0.1:8190 --server-pid <pid> ...
+  python_embeded\python.exe -s scripts\comfyui\factory_contact_sheet.py --report measurements\factory_batch_report.json --out outputs\factory\characters\contact_sheet.png
+input: workflows\factory_characters\characters_v1.json + factory_test_matrix_v1.json
+output: outputs\factory\characters\<run>.png + <run>.manifest.json, contact_sheet{,_races,_views,_tuning}.png, measurements\factory_batch_report*.json
+checks:
+  - name: Аудит весов (размер + SHA-256, 6 файлов)
+    result: PASS
+  - name: Серверная валидация 6 графов (validate_prompt)
+    result: PASS (6/6)
+  - name: Технические прогоны (BASE / FICTIVERSE 0.4-0.8 / RAL 0.4-0.8 / расы / ракурсы)
+    result: PASS 19 прогонов, 0 FAIL, 1 SKIP (1024x1024 — свободно 2.4 ГБ VRAM)
+  - name: Время и память (768x1024, 8 шагов, CFG 2)
+    result: PASS 8-10.6 с; пик VRAM всей карты 7.6-7.7 ГБ (собственный ~6.2 ГБ); пик RAM процесса 2.6-2.9 ГБ
+  - name: Влияние LoRA FICTIVERSE на SDXL Turbo
+    result: FAIL (визуально не влияет при 0.4-1.0 → нужен обычный SDXL, CFG 5-7)
+  - name: Соответствие FACE_STYLE_LOCK (RAL)
+    result: PARTIAL (воксельно, но «игрушечное» лицо и chibi-пропорции)
+  - name: Один персонаж в кадре
+    result: PARTIAL (3 из 7 орк-прогонов дали 2-4 фигуры, negative при CFG 2 слабый)
+  - name: Художественная приёмка
+    result: NOT_TESTED (только владелец)
+issues:
+  - на turbo CFG 2 LoRA и negative работают слабо — стиль не достигается
+  - 1024x1024 требует освободить VRAM (занято ~1.5 ГБ другими приложениями)
+  - ral-vxl запрещает коммерческое использование и производные (FACT-D21)
+next_action: >
+  Владелец смотрит контактные листы; при необходимости согласуется загрузка обычного SDXL
+  (DreamShaper XL 1.0 / SDXL base) для честной проверки LoRA при CFG 5-7.
+```
+
+---
+
 ## COMFY-STYLE-04B — Civitai «Voxel Style [SDXL]» + Voxel Face Style Lock
 
 ```yaml

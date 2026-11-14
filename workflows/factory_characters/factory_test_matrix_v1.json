@@ -1,0 +1,127 @@
+{
+  "id": "FACTORY_TEST_MATRIX_V1",
+  "seed_policy": "same seed is NOT proof of equivalent comparison",
+  "runs": [
+    {
+      "id": "diag_base_512x768",
+      "mode": "BASE",
+      "character": "orc",
+      "view": "three_quarter",
+      "resolution": "diagnostic",
+      "strength": null,
+      "seed": 424242,
+      "purpose": "diagnostic"
+    },
+    {
+      "id": "diag_fictiverse06_512x768",
+      "mode": "FICTIVERSE",
+      "character": "orc",
+      "view": "three_quarter",
+      "resolution": "diagnostic",
+      "strength": 0.6,
+      "seed": 424242,
+      "purpose": "diagnostic"
+    },
+    {
+      "id": "orc_base_768x1024",
+      "mode": "BASE",
+      "character": "orc",
+      "view": "three_quarter",
+      "resolution": "main",
+      "strength": null,
+      "seed": 424242,
+      "purpose": "comparison"
+    },
+    {
+      "id": "orc_fictiverse4_768x1024",
+      "mode": "FICTIVERSE",
+      "character": "orc",
+      "view": "three_quarter",
+      "resolution": "main",
+      "strength": 0.4,
+      "seed": 424242,
+      "purpose": "comparison"
+    },
+    {
+      "id": "orc_fictiverse6_768x1024",
+      "mode": "FICTIVERSE",
+      "character": "orc",
+      "view": "three_quarter",
+      "resolution": "main",
+      "strength": 0.6,
+      "seed": 424242,
+      "purpose": "comparison"
+    },
+    {
+      "id": "orc_fictiverse8_768x1024",
+      "mode": "FICTIVERSE",
+      "character": "orc",
+      "view": "three_quarter",
+      "resolution": "main",
+      "strength": 0.8,
+      "seed": 424242,
+      "purpose": "comparison"
+    },
+    {
+      "id": "orc_ral4_768x1024",
+      "mode": "RAL",
+      "character": "orc",
+      "view": "three_quarter",
+      "resolution": "main",
+      "strength": 0.4,
+      "seed": 424242,
+      "purpose": "comparison"
+    },
+    {
+      "id": "orc_ral6_768x1024",
+      "mode": "RAL",
+      "character": "orc",
+      "view": "three_quarter",
+      "resolution": "main",
+      "strength": 0.6,
+      "seed": 424242,
+      "purpose": "comparison"
+    },
+    {
+      "id": "orc_ral8_768x1024",
+      "mode": "RAL",
+      "character": "orc",
+      "view": "three_quarter",
+      "resolution": "main",
+      "strength": 0.8,
+      "seed": 424242,
+      "purpose": "comparison"
+    },
+    {
+      "id": "human_fictiverse06_768x1024",
+      "mode": "FICTIVERSE",
+      "character": "human",
+      "view": "three_quarter",
+      "resolution": "main",
+      "strength": 0.6,
+      "seed": 424242,
+      "purpose": "race_test"
+    },
+    {
+      "id": "elf_fictiverse06_768x1024",
+      "mode": "FICTIVERSE",
+      "character": "elf",
+      "view": "three_quarter",
+      "resolution": "main",
+      "strength": 0.6,
+      "seed": 424242,
+      "purpose": "race_test"
+    },
+    {
+      "id": "orc_fictiverse06_1024x1024",
+      "mode": "FICTIVERSE",
+      "character": "orc",
+      "view": "three_quarter",
+      "resolution": "hi",
+      "strength": 0.6,
+      "seed": 424242,
+      "purpose": "memory_test",
+      "optional": true
+    }
+  ]
+}
