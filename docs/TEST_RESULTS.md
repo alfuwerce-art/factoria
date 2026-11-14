@@ -403,6 +403,51 @@ workflow на канвасе в браузере (проверена струк�
 
 ---
 
+## COMFY-STYLE-06 — SDXL Base 1.0 + Fictiverse Voxel XL (CFG 5-7)
+
+```yaml
+id: COMFY-STYLE-06
+status: READY_FOR_OWNER_VISUAL_REVIEW
+machine: WINDOWS_11
+software: ComfyUI 0.45.0 + SDXL Base 1.0 + Fictiverse VoxelXL
+version: checkpoint 31e35c80…7e5b (6 938 078 334 B), LoRA 7d9a5f11…8b5c
+source_url: https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0
+license: openrail++ (checkpoint), openrail (LoRA, требует отдельной проверки)
+install_location: D:\programs\ComfyUI\ComfyUI\models\checkpoints\sd_xl_base_1.0.safetensors
+download_sha256: 31e35c80fc4829d14f90153f4c74cd59c90b779f6afe05a74cd6120b893f7e5b
+sha256_verified: YES
+command: |
+  factoria_launch.ps1 -Preset xl -Port 8191 -DisableAssets -KeepRunning
+  factory_run_batch.py --config workflows/factory_characters_v2/sdxl_base_v2.json
+      --matrix workflows/factory_characters_v2/factory_test_matrix_v2.json
+output: outputs/factory/characters_v2/ (PNG + manifests), measurements/factory_batch_report_v2.json, contact_sheet_v2.png
+checks:
+  - name: Официальный SDXL Base 1.0 скачан и сверен (скрипт + Get-FileHash)
+    result: PASS
+  - name: DreamShaper XL Turbo и прежние workflow сохранены
+    result: PASS
+  - name: Серверная валидация V2 графов
+    result: PASS (оба)
+  - name: 10 прогонов (sampler sweep, CFG 5-7, LoRA 0.4-0.8, short-vs-long prompt)
+    result: PASS 10/10, 0 OOM; 29-55 с на 768x1024/28 шагов; пик RAM процесса 6.3-6.9 ГБ
+  - name: LoRA Fictiverse на обычном SDXL
+    result: PASS (блочная геометрия и пиксельные поверхности появляются; на Turbo не было)
+  - name: Один персонаж в кадре
+    result: FAIL (2-3 фигуры в 8 из 10 кадров, несмотря на усиленный negative)
+  - name: Раса сохраняется
+    result: PARTIAL (короткий промпт даёт орка, длинный структурный - бородатого человека)
+  - name: 1024x1024
+    result: NOT_TESTED (свободно ~2.8 ГБ VRAM: карту занимала модель параллельной сессии)
+issues:
+  - character sheet / несколько фигур - единственный оставшийся блокер для Tripo
+  - GPU делился с моделью другой сессии (пики VRAM "вся карта" завышены)
+next_action: >
+  Решение владельца по способу борьбы с несколькими фигурами (img2img/маска, CFG 7-8, кроп+img2img),
+  затем повторный прогон и визуальная приёмка.
+```
+
+---
+
 ## COMFY-STYLE-05 — Фабрика персонажей (главный граф + 3 режима + метрики)
 
 ```yaml
@@ -633,17 +678,17 @@ next_action: >
 
 ---
 
-## COMFY-STYLE-07 � ��������� ���������� �� ���������� (2026-11-14)
+## COMFY-STYLE-07 — генерация персонажей по референсам (2026-11-14)
 
 ``yaml
 id: COMFY-STYLE-07
 status: PARTIAL
 machine: WINDOWS_11
 software: ComfyUI 0.45.0 portable (python_embeded, torch 2.14.1+cu130)
-checkpoint_used: DreamShaperXL_Turbo_v2_1.safetensors (��������, 28 ����� / CFG 6.0)
-checkpoint_target: sd_xl_base_1.0.safetensors (openrail++, SHA-256 31e35c80�7e5b) � ������������
+checkpoint_used: DreamShaperXL_Turbo_v2_1.safetensors (ВРЕМЕННО, 28 шагов / CFG 6.0)
+checkpoint_target: sd_xl_base_1.0.safetensors (openrail++, SHA-256 31e35c80…7e5b) — докачивается
 adapters: ip-adapter-plus_sdxl_vit-h (apache-2.0) + CLIP-ViT-H; controlnet-union-sdxl-1.0 (apache-2.0)
-inputs: references/characters_v1/human_warrior_reference_768x1024.png (�� ��������� ���������), elf, dwarf
+inputs: references/characters_v1/human_warrior_reference_768x1024.png (из скриншота владельца), elf, dwarf
 command: |
   python -s scripts\comfyui\reference_run_batch.py --url http://127.0.0.1:8190 --server-pid <pid> \
     --config workflows/factory_reference/reference_characters_dreamshaper_turbo.json \
@@ -652,22 +697,22 @@ command: |
     --out outputs/factory/reference_v1_turbo --report measurements/reference_batch_report_turbo_v1.json
 output: outputs/factory/reference_v1_turbo/*.png, contact_sheet.png, measurements/reference_batch_report_turbo_v1.json
 checks:
-  - name: ����������� ��������� 4 ������
+  - name: Структурная валидация 4 графов
     result: PASS (IPADAPTER / CONTROLNET / IMG2IMG / IPADAPTER_CONTROLNET)
-  - name: Plumbing 4 ������ (�����-��������, 640x832)
-    result: PASS (4/4, ��� VRAM 7711 MB)
-  - name: ������� �������-���� (10 ��������, 768x1024, 28 �����, CFG 6.0)
-    result: PASS 10/10, 247.7 �, ��� VRAM 7743 MB, ��� RSS 7490 MB
-  - name: �����-������� ���� (����/�����, CN 0.6 � IPA 0.8)
-    result: PASS 4/4, 111.5 �
-  - name: �������� � ��������� (��������� L1/IoU)
+  - name: Plumbing 4 графов (турбо-чекпоинт, 640x832)
+    result: PASS (4/4, пик VRAM 7711 MB)
+  - name: Матрица человек-воин (10 прогонов, 768x1024, 28 шагов, CFG 6.0)
+    result: PASS 10/10, 247.7 с, пик VRAM 7743 MB, пик RSS 7490 MB
+  - name: Кросс-расовый тест (эльф/дворф, CN 0.6 и IPA 0.8)
+    result: PASS 4/4, 111.5 с
+  - name: Близость к референсу (эвристика L1/IoU)
     result: img2img d0.25 L1 2.19 / IoU 0.992; ControlNet 0.6 IoU 0.535; IPAdapter 1.0 IoU 0.354
 issues:
-  - �������� �������� SDXL Base 1.0 ��� �������� (65-75 %), ��������� ������ �� ��������
-  - ControlNet Canny >= 0.6 �� ��������� �������� ��� ��������� ������ ������
-  - IPAdapter style transfer ������ ���������� ��������� CubeGame
-  - 1024x1024 �� 8 �� VRAM �� �����������
-next_action: �������� SDXL Base 1.0, ������������� ComfyUI, ��������� ��� �� ������� � �������� ���������� �����
+  - основной чекпоинт SDXL Base 1.0 ещё качается (65-75 %), финальный прогон не выполнен
+  - ControlNet Canny >= 0.6 на референсе человека даёт наложение второй фигуры
+  - IPAdapter style transfer теряет компактные пропорции CubeGame
+  - 1024x1024 на 8 ГБ VRAM не проверяется
+next_action: докачать SDXL Base 1.0, перезапустить ComfyUI, повторить тот же матрикс и сравнить контактные листы
 ``
 
 ## COMFY-STYLE-08 — Alpha editor и восемь фронтов
