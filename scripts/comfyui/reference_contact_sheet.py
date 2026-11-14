@@ -83,8 +83,12 @@ def main() -> int:
         ty = y0 + thumb_h + 6
         draw.text((x0, ty), run["run_id"], fill=FG, font=small)
         draw.text((x0, ty + 18), label, fill=color, font=font)
+        lora = run.get("lora_strength")
+        lora_txt = ""
+        if lora is not None:
+            lora_txt = f"  LoRA {lora}"
         draw.text((x0, ty + 40),
-                  f"{run['resolution']['width']}x{run['resolution']['height']} seed {run['seed']} "
+                  f"{run['resolution']['width']}x{run['resolution']['height']} seed {run['seed']}{lora_txt} "
                   f"{run['steps']}st CFG {run['cfg']}", fill=FG, font=small)
         draw.text((x0, ty + 56), f"{run['seconds']}s  VRAM {run.get('peak_gpu_used_mb_whole_card')} MB",
                   fill=FG, font=small)

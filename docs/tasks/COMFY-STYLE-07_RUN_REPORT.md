@@ -34,10 +34,14 @@
 
 | Файл | Состав | Статус |
 |---|---|---|
-| `FACTORY_REFERENCE_IPADAPTER.json` | SDXL → CLIP ViT-H + `ip-adapter-plus_sdxl_vit-h` → `IPAdapterAdvanced` (weight / weight_type: linear, style transfer) → KSampler | структурная валидация **PASS** |
-| `FACTORY_REFERENCE_CONTROLNET.json` | SDXL → ImageScale → Canny 0.35/0.75 → `SetUnionControlNetType("canny/lineart/anime_lineart/mlsd")` → `ControlNetApplyAdvanced(strength)` → KSampler | **PASS** |
-| `FACTORY_REFERENCE_IMG2IMG.json` | SDXL + Load Image → VAE Encode → KSampler(denoise) → VAE Decode | **PASS** |
-| `FACTORY_REFERENCE_IPADAPTER_CONTROLNET.json` | IPAdapter-модель + ControlNet-кондиционирование одновременно | **PASS** (при валидации отсутствовал только checkpoint) |
+| `FACTORY_REFERENCE_IPADAPTER.json` | SDXL → `LoraLoader` (VoxelXL) → CLIP ViT-H + `ip-adapter-plus_sdxl_vit-h` → `IPAdapterAdvanced` (weight / weight_type: linear, style transfer) → KSampler | структурная валидация **PASS** |
+| `FACTORY_REFERENCE_CONTROLNET.json` | SDXL → LoRA → ImageScale → Canny 0.35/0.75 → `SetUnionControlNetType("canny/lineart/anime_lineart/mlsd")` → `ControlNetApplyAdvanced(strength)` → KSampler | **PASS** |
+| `FACTORY_REFERENCE_IMG2IMG.json` | SDXL + LoRA + Load Image → VAE Encode → KSampler(denoise) → VAE Decode | **PASS** |
+| `FACTORY_REFERENCE_IPADAPTER_CONTROLNET.json` | LoRA-модель + IPAdapter + ControlNet одновременно | **PASS** |
+
+**LoRA в графах (по замечанию владельца):** во все четыре графа добавлен `LoraLoader` — `VoxelXL_v1.safetensors`, trigger `voxel style`, strength по умолчанию **0.6** (0.0 = выключено), редактируется в ноде `STYLE LoRA`. RAL LoRA (`ral-vxl`) не используется (FACT-D21). Свип силы LoRA — §3.3.
+
+**Чекпоинт в UI:** графы открываются на доступном `DreamShaperXL_Turbo_v2_1` (`model.default_checkpoint_for_ui`), CLI-раннер подставляет `model.checkpoint` = SDXL Base 1.0. Когда база докачается, чекпоинт переключается в нод `A. MODEL` без пересборки графа.
 
 Настройки обычного SDXL: **28 шагов, CFG 6.0, `dpmpp_2m` / `karras`**, seed `20261114`, 768×1024. Turbo-пресеты (CFG 2 / 4–8 шагов) не используются.
 Конфиг: `workflows/factory_reference/reference_characters_v1.json`; матрикс: `reference_test_matrix_v1.json` (10 прогонов: IPAdapter 0.6/0.8/1.0 + style transfer, ControlNet 0.6/0.9, img2img 0.25/0.40/0.55, IPAdapter 0.8 + ControlNet 0.8).
@@ -79,6 +83,19 @@
 | 10 | `ref_ipa_cn_combo` | IPAdapter 0.8 + ControlNet 0.8 | 38.2 s | 7583 MB | 7490 MB | 36.94 | 0.313 |
 
 Итого: **10/10 PASS**, 247.7 с, пик VRAM 7743 MB, пик RSS 7490 MB, OOM нет.
+
+### 3.3 Сила LoRA VoxelXL (по замечанию владельца: «лора не используется»)
+
+`reference_test_matrix_lora_v1.json`: человек-воин, IPAdapter 0.8 зафиксирован, меняется только сила LoRA. Чекпоинт — тот же временный DreamShaper (28 шагов / CFG 6.0). Контактный лист `outputs/factory/reference_v1_turbo/contact_sheet_lora.png`, сводка `measurements/reference_batch_report_turbo_lora_v1.json`.
+
+| Прогон | LoRA | Время | Пик VRAM | L1 ↓ | IoU ↑ |
+|---|---|---|---|---|---|
+| `ref_lora_000` | 0.0 (выкл.) | 29.5 s | 7650 MB | 51.84 | 0.318 |
+| `ref_lora_040` | 0.4 | 32.2 s | 7663 MB | 49.41 | 0.415 |
+| `ref_lora_060` | 0.6 | 29.3 s | 7681 MB | 48.02 | 0.537 |
+| `ref_lora_080` | 0.8 | 31.2 s | 7693 MB | 45.97 | **0.571** |
+
+LoRA заметно усиливает воксельную подачу и приближает силуэт к референсу; 0.6 — баланс, 0.8 — максимальная блочность (на временном чекпоинте). Проверка «открыл граф → Queue» без правок: `FACTORY_REFERENCE_IPADAPTER` с дефолтами (DreamShaper + LoRA 0.6 + IPAdapter 1.0) отработал за **30.1 с**, изображение `outputs/factory/reference_v1_turbo/lora/ui_default.png`.
 
 ## 4. Техническая оценка (без художественной приёмки)
 
@@ -124,7 +141,9 @@
 
 ## 5. Ограничения и открытые вопросы
 
-- **Checkpoint:** официальный `sd_xl_base_1.0.safetensors` (6.94 ГБ, SHA-256 `31e35c80…7e5b`, openrail++) на момент отчёта докачан на ~65 %; HF отдаёт ~0.8–1.1 МБ/с на 12 соединений (перезапускаемый загрузчик с watchdog и байтовым возобновлением, лог `logs/COMFY-STYLE-07_sdxl_download_2026-11-14.log`). Пока файла нет, основной матрикс шёл на `DreamShaper XL Turbo v2.1` с обычным сэмплингом 28/6.0 — это явно помечено в §3.2 и на контактном листе; Turbo-пресет не использовался.
+- **Checkpoint:** официальный `sd_xl_base_1.0.safetensors` (6.94 ГБ, SHA-256 `31e35c80…7e5b`, openrail++) скачался ~14:42, но **не прошёл проверку SHA-256** (получен `be23becb…b398`): сборка из частей после нескольких прерываний/перезапусков загрузчика дала повреждённый файл. Загрузчик сам переименовал его в `sd_xl_base_1.0.safetensors.CORRUPT_144341`, файл удалён, начата повторная загрузка (~2 ч при 1 МБ/с). Пока базы нет, UI-графы открываются на `DreamShaperXL_Turbo_v2_1` (`default_checkpoint_for_ui`), CLI-раннер переключает чекпоинт из конфига.
+- **Ловушка (найдена на этом шаге):** нельзя останавливать загрузчик фильтром по `CommandLine -match 'fetch_checkpoint_parallel'` — под фильтр попадает и обёртка собственной команды агента, поэтому процесс-загрузчик убивался посреди сборки частей (`exit code -1`), что и дало повреждённый merge. Останавливать только по точному PID скрипта либо не вмешиваться.
+- **Сервер ComfyUI:** экземпляр на 8188 (`--reserve-vram 1`) поднят заново после того, как его остановили для освобождения RAM; именно его отсутствие давало в UI ошибку `TypeError: Failed to fetch` в `rgthree.js`. Тестовый 8190 остановлен.
 - 1024×1024 не проверяется (8 ГБ VRAM); рабочий размер — 768×1024.
 - IPAdapter+ControlNet одновременно укладывается в VRAM только с offload (пик 7583 MB / RSS 7490 MB), поэтому порядок прогонов последовательный.
 - ControlNet на силе 0.9 даёт дублирование фигуры; рабочий диапазон пока 0.5–0.6.

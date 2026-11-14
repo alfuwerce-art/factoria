@@ -1,13 +1,13 @@
 # Factory Reference — генерация персонажей по утверждённым референсам (COMFY-STYLE-07)
 
 Набор ComfyUI-графов, в которых персонаж привязан к **референсу из CubeGame**, а не только к текстовому промпту.
-Чекпоинт — обычный SDXL Base 1.0; настройки Turbo (CFG 2 / 4–8 шагов) здесь не применяются.
+Чекпоинт — обычный SDXL Base 1.0 (в графах по умолчанию стоит доступный DreamShaper XL Turbo, переключается в ноде `A. MODEL`); настройки Turbo (CFG 2 / 4–8 шагов) здесь не применяются. Во всех графах есть нода `STYLE LoRA` — `VoxelXL_v1`, strength 0.6 (0.0 = выключено).
 
 ## Файлы
 
 | Файл | Что делает | Ключевые параметры |
 |---|---|---|
-| `reference_characters_v1.json` | конфиг: модель, сэмплинг, референсы, промпты трёх персонажей | steps 28, CFG 6.0, `dpmpp_2m`/`karras`, seed 20261114 |
+| `reference_characters_v1.json` | конфиг: модель, сэмплинг, LoRA, референсы, промпты трёх персонажей | steps 28, CFG 6.0, `dpmpp_2m`/`karras`, seed 20261114, LoRA VoxelXL 0.6 |
 | `FACTORY_REFERENCE_IPADAPTER.json` | SDXL + CLIP ViT-H + `ip-adapter-plus_sdxl_vit-h` | weight 1.0 (0.6/0.8/1.0), weight_type `linear` / `style transfer` |
 | `FACTORY_REFERENCE_CONTROLNET.json` | SDXL + union ControlNet, контур Canny с референса | strength 0.9 (0.6/0.9), Canny 0.35/0.75 |
 | `FACTORY_REFERENCE_IMG2IMG.json` | Load Image → VAE Encode → KSampler → VAE Decode | denoise 0.40 (0.25/0.40/0.55) |

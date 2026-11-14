@@ -12,7 +12,9 @@
     "sha256": "31e35c80fc4829d14f90153f4c74cd59c90b779f6afe05a74cd6120b893f7e5b",
     "source": "https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0",
     "turbo_settings": false,
-    "note": "РћР±С‹С‡РЅС‹Р№ SDXL: 25вЂ“30 С€Р°РіРѕРІ, CFG 5вЂ“7. РќР°СЃС‚СЂРѕР№РєРё Turbo (CFG 2 / 4вЂ“8 С€Р°РіРѕРІ) Р·РґРµСЃСЊ РЅРµ РїСЂРёРјРµРЅСЏСЋС‚СЃСЏ."
+    "note": "РћР±С‹С‡РЅС‹Р№ SDXL: 25вЂ“30 С€Р°РіРѕРІ, CFG 5вЂ“7. РќР°СЃС‚СЂРѕР№РєРё Turbo (CFG 2 / 4вЂ“8 С€Р°РіРѕРІ) Р·РґРµСЃСЊ РЅРµ РїСЂРёРјРµРЅСЏСЋС‚СЃСЏ.",
+    "default_checkpoint_for_ui": "DreamShaperXL_Turbo_v2_1.safetensors",
+    "note_ui": "UI-дефолт — доступный сейчас чекпоинт; CLI-раннер подставляет model.checkpoint (SDXL Base 1.0), когда он скачан."
   },
   "sampling": {
     "steps_default": 28,
@@ -133,5 +135,19 @@
       "identity": "male dwarf warrior",
       "prompt": "voxel style, cube-built adult dwarf warrior, orange block hair and braided beard, wide leather hat brim, brown leather apron, iron shoulder plates and greaves, broad heavy body, very short legs, blocky hands and boots, compact chunky proportions, large head, pixel-textured materials, A-pose, front view, full body, plain neutral grey background, soft even lighting, single character"
     }
-  }
+  },
+  "style_module": {
+    "file": "VoxelXL_v1.safetensors",
+    "trigger": "voxel style",
+    "strength_default": 0.6,
+    "strengths": [
+      0.0,
+      0.4,
+      0.6,
+      0.8
+    ],
+    "license": "openrail — коммерческое использование требует отдельной проверки",
+    "ral_policy": "RAL LoRA (ral-vxl) не применяется (FACT-D21)"
+  },
+  "prompt_template": "voxel style, {character}"
 }

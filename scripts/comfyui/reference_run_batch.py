@@ -106,6 +106,10 @@ def apply(prompt: dict, run: dict, cfg: dict, res: dict, image_name: str, prefix
         elif ct == "EmptyLatentImage":
             n["inputs"]["width"], n["inputs"]["height"] = res["width"], res["height"]
             n["inputs"]["batch_size"] = 1
+        elif ct == "LoraLoader":
+            strength = float(run.get("lora_strength", (cfg.get("style_module") or {}).get("strength_default", 0.6)))
+            n["inputs"]["strength_model"] = strength
+            n["inputs"]["strength_clip"] = strength
         elif ct == "IPAdapterAdvanced":
             n["inputs"]["weight"] = float(run.get("ipadapter_weight", 1.0))
             n["inputs"]["weight_type"] = run.get("ipadapter_weight_type",
@@ -224,6 +228,9 @@ def main() -> int:
             "character": run["character"],
             "checkpoint": cfg["model"]["checkpoint"],
             "checkpoint_sha256": cfg["model"]["sha256"],
+            "lora": (cfg.get("style_module") or {}).get("file"),
+            "lora_trigger": (cfg.get("style_module") or {}).get("trigger"),
+            "lora_strength": float(run.get("lora_strength", (cfg.get("style_module") or {}).get("strength_default", 0.6))),
             "reference_image": image_name,
             "reference_path": os.path.abspath(ref_local),
             "reference_sha256": sha256_file(ref_local),

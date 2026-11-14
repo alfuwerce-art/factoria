@@ -87,18 +87,31 @@ def build(cfg: dict, oi: dict, mode: str) -> dict:
     g = Graph(oi)
     g.add("MarkdownNote", {"text": _readme(cfg, mode)}, pos=(-1150, 40), title="FACTORY REFERENCE - read me")
 
-    ckpt = g.add("CheckpointLoaderSimple", {"ckpt_name": m["checkpoint"]}, pos=(0, 60),
+    ckpt = g.add("CheckpointLoaderSimple", {"ckpt_name": m.get("default_checkpoint_for_ui") or m["checkpoint"]}, pos=(0, 60),
                  title="A. MODEL - SDXL Base 1.0")
+    lora_cfg = cfg.get("style_module") or {}
+    if lora_cfg.get("file"):
+        lora_n = g.add("LoraLoader", {
+            "lora_name": lora_cfg["file"],
+            "strength_model": lora_cfg.get("strength_default", 0.6),
+            "strength_clip": lora_cfg.get("strength_default", 0.6),
+        }, pos=(380, 60), title="STYLE LoRA - VoxelXL (strength editable, 0.0 = off)")
+        g.connect(ckpt, 0, lora_n, "model")
+        g.connect(ckpt, 1, lora_n, "clip")
+        model_src, clip_src = lora_n, lora_n
+    else:
+        model_src, clip_src = ckpt, ckpt
+
     pos_n = g.add("CLIPTextEncode", {"text": char["prompt"]}, pos=(760, 240),
                   title="B. POSITIVE")
     neg_n = g.add("CLIPTextEncode", {"text": neg}, pos=(760, 560),
                   title="C. NEGATIVE")
-    g.connect(ckpt, 1, pos_n, "clip")
-    g.connect(ckpt, 1, neg_n, "clip")
+    g.connect(clip_src, 1, pos_n, "clip")
+    g.connect(clip_src, 1, neg_n, "clip")
 
     img_n = g.add("LoadImage", {"image": ref}, pos=(0, 300),
                   extra_widgets=["image"], title="REFERENCE. Load Image (owner cutout)")
-    model_out, model_slot = ckpt, 0
+    model_out, model_slot = model_src, 0
     pos_out, pos_slot = pos_n, 0
     neg_out, neg_slot = neg_n, 0
     latent = None
@@ -116,7 +129,7 @@ def build(cfg: dict, oi: dict, mode: str) -> dict:
             "end_at": cfg["ipadapter"]["end_at"],
             "embeds_scaling": cfg["ipadapter"]["embeds_scaling"],
         }, pos=(380, 700), title="IPAdapter Advanced (weight editable)")
-        g.connect(ckpt, 0, adv_n, "model")
+        g.connect(model_src, 0, adv_n, "model")
         g.connect(ipa_n, 0, adv_n, "ipadapter")
         g.connect(img_n, 0, adv_n, "image")
         g.connect(cv_n, 0, adv_n, "clip_vision")
