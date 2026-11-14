@@ -123,6 +123,34 @@ for ($i = 0; $i -lt $Connections; $i++) {
         Path  = (Join-Path $partsDir "part_$i.bin")
     }
 }
+# Layout guard: a parts directory created with a different chunk size (e.g. after changing
+# -Connections) contains byte ranges that do not match the current plan. Mixing layouts corrupts
+# the assembled file (this actually happened: SHA-256 mismatch after a 4 -> 12 connection switch).
+# In that case the old directory is moved aside (never deleted) and a clean download starts.
+$layoutFile = Join-Path $partsDir 'layout.json'
+$currentLayout = @{ total = $TotalBytes; connections = $Connections; chunk = $chunk } | ConvertTo-Json -Compress
+$existing = Get-ChildItem $partsDir -File -ErrorAction SilentlyContinue | Where-Object { $_.Name -like 'part_*.bin*' }
+if (Test-Path $layoutFile) {
+    $oldLayout = Get-Content $layoutFile -Raw
+    if ($oldLayout.Trim() -ne $currentLayout) {
+        $stale = "$partsDir.stale-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
+        "[$(Get-LogStamp)] LAYOUT_CHANGED old=$($oldLayout.Trim()) new=$currentLayout -> moving parts aside to $stale"
+        Move-Item -Path $partsDir -Destination $stale -Force
+        New-Item -ItemType Directory -Force -Path $partsDir | Out-Null
+        $layoutFile = Join-Path $partsDir 'layout.json'
+    }
+} elseif ($existing.Count -gt 0) {
+    $bad = @($existing | Where-Object { $_.Length -gt $chunk })
+    if ($bad.Count -gt 0) {
+        $stale = "$partsDir.stale-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
+        "[$(Get-LogStamp)] LEGACY_PARTS_WITH_WRONG_RANGE (part larger than chunk) -> moving aside to $stale"
+        Move-Item -Path $partsDir -Destination $stale -Force
+        New-Item -ItemType Directory -Force -Path $partsDir | Out-Null
+        $layoutFile = Join-Path $partsDir 'layout.json'
+    }
+}
+Set-Content -Path $layoutFile -Value $currentLayout -Encoding ascii
+
 "[$(Get-LogStamp)] plan: $($parts.Count) parts, each $([math]::Round($chunk / 1MB, 0)) MB"
 
 # recover tails left by an interrupted run before anything else
@@ -245,11 +273,16 @@ try {
 if ((Get-Item $tmp).Length -ne $TotalBytes) {
     "ASSEMBLED_SIZE_MISMATCH got=$((Get-Item $tmp).Length) expected=$TotalBytes"; exit 3
 }
+# Verify BEFORE replacing the target and BEFORE dropping the parts: on a mismatch the
+# downloaded bytes stay on disk for inspection instead of being lost.
+$sha = (Get-FileHash -Path $tmp -Algorithm SHA256).Hash.ToLower()
+"sha256=$sha"
+if ($sha -ne $ExpectedSha256.ToLower()) {
+    "SHA256_MISMATCH expected=$($ExpectedSha256.ToLower())"
+    "assembled_file_kept=$tmp parts_kept=$partsDir"
+    exit 4
+}
 Move-Item -Path $tmp -Destination $Target -Force
 Remove-Item $partsDir -Recurse -Force -ErrorAction SilentlyContinue
-
-$sha = (Get-FileHash -Path $Target -Algorithm SHA256).Hash.ToLower()
-"sha256=$sha"
-if ($sha -ne $ExpectedSha256.ToLower()) { "SHA256_MISMATCH expected=$($ExpectedSha256.ToLower())"; exit 4 }
 "SHA256_OK"
 exit 0

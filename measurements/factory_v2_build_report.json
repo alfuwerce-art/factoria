@@ -1,6 +1,6 @@
 {
   "object_info_source": "measurements\\comfyui_object_info_2026-11-14_full.json",
-  "config": "workflows\\factory_characters\\sdxl_base_v2.json",
+  "config": "workflows\\factory_characters_v2\\sdxl_base_v2.json",
   "workflows": {
     "FACTORY_CHARACTER_SDXL_BASE_V2.json": {
       "status": "PASS",
