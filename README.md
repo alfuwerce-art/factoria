@@ -27,9 +27,8 @@
 | ComfyUI | **0.45.0 portable** → `D:\programs\ComfyUI\` (SHA-256 сверен, 5.75 ГБ после COMFY-STYLE-02); сервер/UI/API/CUDA проверены |
 | ComfyUI custom nodes | **Manager 4.2.2** (PyPI), **Crystools 1.27.4**, **IPAdapter_plus**, **controlnet_aux**, **rgthree-comfy** — установлены, импорт без ошибок |
 | SD 1.5 checkpoint | `v1-5-pruned-emaonly-fp16.safetensors` (2.03 ГБ, CreativeML OpenRAIL-M) — единственный чекпоинт; веса IPAdapter/ControlNet **не скачаны** (список в отчёте) |
-| FACTORIA VOXEL_STYLE | 3 готовых workflow + prompt-контракт → `workflows/factoria_voxel_style/`; запуск `scripts/comfyui/launch_safe_baseline.bat` |
-| DREAMSHAPER XL (эксперимент) | SDXL DreamShaper XL Turbo v2.1 + VoxelXL LoRA + SDXL IPAdapter + union ControlNet → `workflows/dreamshaper_xl/`; запуск `scripts/comfyui/launch_dreamshaper_xl.bat`; **веса докачиваются**, стиль не утверждён |
-| Civitai Voxel Style [SDXL] (эксперимент, лицензия ограничена) | `ral-vxl` LoRA + расовые workflow орк/человек/эльф → `workflows/dreamshaper_xl/DREAMSHAPER_XL_CIVITAI_VOXEL*.json`; BODY/FACE style lock в `prompt_voxel_face_lock_v1.json`; **коммерческое использование не разрешено автором** (FACT-D21) |
+| FACTORY REFERENCE (актуальный, COMFY-STYLE-07) | SDXL + IPAdapter / ControlNet Canny / img2img / комбо на подготовленных референсах человека, эльфа и дворфа → `workflows/factory_reference/`; инструкция — `workflows/factory_reference/README.md` |
+| Старые наборы workflow | `workflows/factoria_voxel_style/`, `workflows/dreamshaper_xl/`, `workflows/factory_characters/` **удалены из рабочего дерева** по решению владельца 2026-11-14; остаются в истории git (коммиты до `00ddbf9`) |
 | Git / remote | `origin` = `alfuwerce-art/factoria.git`; рабочая ветка `factory/work`; `main` не изменяется исполнителем |
 | Режим DSH | **CubeGame Factory** (`cubegame-factory`) — выбирается при создании нового чата |
 
@@ -104,33 +103,39 @@ $env:BLENDER_USER_CONFIG="D:\Projects\CubeGame Factory\environments\blender\conf
 
 ---
 
-## Как воспроизвести COMFY-STYLE-02/03 (FACTORIA VOXEL_STYLE)
+## Как воспроизвести COMFY-STYLE-07 (reference-guided персонажи)
+
+Актуальный набор графов — только `workflows/factory_reference/`; там же инструкция и список параметров.
+Старые наборы (`factoria_voxel_style`, `dreamshaper_xl`, `factory_characters`) удалены из рабочего дерева,
+их содержимое доступно в истории git.
 
 ```powershell
-# 1. Запуск ComfyUI в SAFE_BASELINE (--novram, минимум VRAM) — двойной клик или:
-& "D:\Projects\CubeGame Factory\scripts\comfyui\launch_safe_baseline.bat"
-#    второй режим, если RAM/VRAM не укладываются:
-& "D:\Projects\CubeGame Factory\scripts\comfyui\launch_cpu_fallback.bat"
-
-# 2. Запуск с замером idle RAM/VRAM (без генерации)
+# 1. ComfyUI в SDXL-пресете на отдельном порту (основной UI не трогаем)
 powershell -NoProfile -ExecutionPolicy Bypass -File `
-    "D:\Projects\CubeGame Factory\scripts\comfyui\factoria_launch.ps1" -Preset safe -MeasureIdle
+    "D:\Projects\CubeGame Factory\scripts\comfyui\factoria_launch.ps1" -Preset xl -Port 8190 -DisableAssets -KeepRunning
 
-# 3. Пересборка и серверная валидация workflow (после правки prompt-контракта)
+# 2. Пересборка и серверная валидация четырёх reference-графов
 $py = 'D:\programs\ComfyUI\python_embeded\python.exe'
-& $py -s "D:\Projects\CubeGame Factory\scripts\comfyui\build_factoria_voxel_workflows.py" `
-    --object-info "D:\Projects\CubeGame Factory\measurements\comfyui_object_info_2026-11-13_full.json" `
-    --config "D:\Projects\CubeGame Factory\workflows\factoria_voxel_style\voxel_style_prompt_v1.json" `
-    --out "D:\Projects\CubeGame Factory\workflows\factoria_voxel_style"
-& $py -s "D:\Projects\CubeGame Factory\scripts\comfyui\validate_factoria_workflows.py" `
-    --comfy "D:\programs\ComfyUI\ComfyUI" `
-    --workflow-dir "D:\Projects\CubeGame Factory\workflows\factoria_voxel_style" `
-    --report "D:\Projects\CubeGame Factory\measurements\factoria_voxel_style_validation.json"
+& $py -s "D:\Projects\CubeGame Factory\scripts\comfyui\build_reference_workflows.py" `
+    --object-info "http://127.0.0.1:8190/object_info" `
+    --config "D:\Projects\CubeGame Factory\workflows\factory_reference\reference_characters_v1.json" `
+    --out "D:\Projects\CubeGame Factory\workflows\factory_reference" `
+    --report "D:\Projects\CubeGame Factory\measurements\reference_workflows_build.json"
+
+# 3. Сравнение человека-воина (IPAdapter / ControlNet / img2img / комбо)
+& $py -s "D:\Projects\CubeGame Factory\scripts\comfyui\reference_run_batch.py" `
+    --url http://127.0.0.1:8190 --server-pid <PID> `
+    --config "D:\Projects\CubeGame Factory\workflows\factory_reference\reference_characters_v1.json" `
+    --matrix "D:\Projects\CubeGame Factory\workflows\factory_reference\reference_test_matrix_v1.json" `
+    --workflow-dir "D:\Projects\CubeGame Factory\workflows\factory_reference" `
+    --comfy-input "D:\programs\ComfyUI\ComfyUI\input" `
+    --out "D:\Projects\CubeGame Factory\outputs\factory\reference_v1" `
+    --report "D:\Projects\CubeGame Factory\measurements\reference_batch_report_v1.json"
 ```
 
-UI — <http://127.0.0.1:8188>, workflow: `Workflow → Open` →
-`workflows\factoria_voxel_style\FACTORIA_VOXEL_STYLE_BASE.json`. Инструкция владельцу —
-`workflows\factoria_voxel_style\README.md`. Отчёт этапа — `docs/tasks/COMFY-STYLE-02_03_RUN_REPORT.md`.
+В UI: `Workflow → Open` → `workflows\factory_reference\FACTORY_REFERENCE_IPADAPTER.json`
+(или `..._CONTROLNET`, `..._IMG2IMG`, `..._IPADAPTER_CONTROLNET`). Референсы уже лежат в
+`D:\programs\ComfyUI\ComfyUI\input\factoria_ref_*.png`. Отчёт этапа — `docs/tasks/COMFY-STYLE-07_RUN_REPORT.md`.
 
 **Найденная ловушка:** launcher'ы обязаны выставлять `PYTHONUTF8=1`/`PYTHONIOENCODING=utf-8`,
 иначе rgthree-comfy печатает emoji и сервер падает `UnicodeEncodeError` на cp1251-консоли.
