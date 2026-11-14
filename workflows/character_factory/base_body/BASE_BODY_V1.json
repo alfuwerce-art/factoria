@@ -7,8 +7,8 @@
     "LEFT",
     "RIGHT"
   ],
-  "positive": "one full-body adult character, orthographic T-pose, arms extended horizontally at shoulder height, straight symmetrically placed legs, feet flat and separated, full limbs and extremities within canvas, neutral opaque form-fitting matte base layer with no seams or costume shaping, bald neutral head with minimal placeholder features",
-  "negative": "bent arms, dropped arms, A-pose, uneven shoulders, crossed or bent legs, hidden hands, costume layers, armor, weapon, accessories, hair, beard, mustache, headwear, detachable pieces",
+  "positive": "(single adult human technical voxel mannequin, full body:1.15), (strict T-pose with both arms rigid, straight and horizontal at shoulder height:1.25), mirror-symmetric stance, straight legs and separated feet flat on one baseline, whole square hands and integral block feet visible, centred full-height silhouette, (featureless blank rectangular head with a flat forehead and a simple visible neck:1.2), (one continuous desaturated neutral-grey matte material across head, torso, hands and feet:1.2), minimal large joined cuboid volumes, flat planes, a few large stepped edges, plain neutral grey background, simplified non-anatomical geometry and smooth monochrome areas",
+  "negative": "(clothes, costume, shirt, trousers, underwear, shorts, armor, shoes, boots, gloves, belts, seams, collar, cuffs, straps, socket caps:1.25), weapon, accessories, (eyes, pupils, eyebrows, eyelashes, nose, lips, mouth, expression, hair, beard, mustache, headwear:1.25), other face details, anatomy definition, muscles, skin texture, anatomical markings, gendered chest detailing, small cubes, clutter, movable attachments, extra limbs, A-pose, bent wrists, sloped arms, bent knees, hidden hands, hidden feet, ground-plane perspective, asymmetric silhouette",
   "graph": {
     "checkpoint": {
       "class_type": "CheckpointLoaderSimple",

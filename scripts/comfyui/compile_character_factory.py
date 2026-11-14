@@ -173,11 +173,15 @@ def compile_view(args):
         if args.asset == "HAIRCUT_MODULE":
             features = [option["visual_type"], *option["secondary_features"]]
             description += " Visual features: " + ", ".join(features)
-    anatomy_text = (anatomy["body_build"],) if args.asset == "BASE_BODY" else ()
-    if args.asset != "FACE_MODULE":
-        anatomy_text += (anatomy["skin"],)
-    anatomy_text += (anatomy["head_shape"], anatomy["ears"], anatomy["jaw"], *anatomy["racial_features"])
-    geometry_text = tuple(geometry[key] for key in ("language", "block_density", "block_size_hierarchy", "proportions", "texture", "render"))
+    if args.asset == "BASE_BODY":
+        anatomy_text = (anatomy["body_build"],)
+        geometry_fields = ("language", "block_density", "block_size_hierarchy", "proportions", "render")
+    else:
+        anatomy_text = (anatomy["head_shape"], anatomy["ears"], anatomy["jaw"], *anatomy["racial_features"])
+        if args.asset == "HAIRCUT_MODULE":
+            anatomy_text = (anatomy["skin"], *anatomy_text)
+        geometry_fields = ("language", "block_density", "block_size_hierarchy", "proportions", "texture", "render")
+    geometry_text = tuple(geometry[key] for key in geometry_fields)
     positive = ", ".join(filter(None, (*geometry_text, frame["camera"], frame["background"]["description"],
                                       frame["lighting"], VIEWS[args.view], template["positive"], *anatomy_text, description)))
     negative = style["negative_prompt"] + ", " + template["negative"]
