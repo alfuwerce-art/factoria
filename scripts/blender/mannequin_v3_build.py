@@ -96,7 +96,57 @@ def part_mesh(name, boxes):
     return mesh
 
 
+def union_block_mesh(name, boxes):
+    """Extract the exterior of intersecting, axis-aligned blocks."""
+    axes = ("x", "y", "z")
+    bounds = [
+        [(round(b[a] - b["s" + a] / 2, 6), round(b[a] + b["s" + a] / 2, 6))
+         for a in axes]
+        for b in boxes
+    ]
+    cuts = [sorted({v for box in bounds for v in box[i]}) for i in range(3)]
+    occupied = {
+        (i, j, k)
+        for box in bounds
+        for i in range(cuts[0].index(box[0][0]), cuts[0].index(box[0][1]))
+        for j in range(cuts[1].index(box[1][0]), cuts[1].index(box[1][1]))
+        for k in range(cuts[2].index(box[2][0]), cuts[2].index(box[2][1]))
+    }
+    faces = []
+    for cell in sorted(occupied):
+        for axis in range(3):
+            u, v = (axis + 1) % 3, (axis + 2) % 3
+            for side in (-1, 1):
+                neighbor = list(cell)
+                neighbor[axis] += side
+                if tuple(neighbor) in occupied:
+                    continue
+                corners = []
+                for du, dv in ((0, 0), (1, 0), (1, 1), (0, 1)):
+                    point = list(cell)
+                    point[axis] += int(side > 0)
+                    point[u] += du
+                    point[v] += dv
+                    corners.append(tuple(cuts[i][point[i]] for i in range(3)))
+                faces.append(corners if side > 0 else corners[::-1])
+
+    vertices = dict.fromkeys(point for face in faces for point in face)
+    indices = {point: i for i, point in enumerate(vertices)}
+    mesh = bpy.data.meshes.new(name)
+    mesh.from_pydata(list(vertices), [], [[indices[p] for p in face] for face in faces])
+    bm = bmesh.new()
+    bm.from_mesh(mesh)
+    bmesh.ops.dissolve_limit(bm, angle_limit=0.0001, verts=list(bm.verts),
+                             edges=list(bm.edges))
+    bm.to_mesh(mesh)
+    bm.free()
+    mesh.update()
+    return mesh
+
+
 def bevel_mesh(mesh, offset=BEVEL_OFFSET):
+    if offset == 0:
+        return "bevel_disabled"
     bm = bmesh.new()
     bm.from_mesh(mesh)
     note = "bevel_skipped"
@@ -127,25 +177,28 @@ def make_material():
 
 def build_geometry(profile, mat):
     objects = {}
+    part_bones = profile.get("part_bones", PART_BONE)
+    part_frames = profile.get("part_frames", {})
     for part, boxes in profile["parts"].items():
-        mesh = part_mesh(part, boxes)
-        meshes_note = bevel_mesh(mesh)
+        mesh_factory = union_block_mesh if profile.get("union_blocks") else part_mesh
+        mesh = mesh_factory(part, boxes)
+        offset = profile.get("part_bevel_m", {}).get(part, profile.get("bevel_m", BEVEL_OFFSET))
+        meshes_note = bevel_mesh(mesh, offset)
+        if part in part_frames:
+            mesh.transform(part_frames[part])
+            mesh.update()
+        lo = [min(v.co[i] for v in mesh.vertices) for i in range(3)]
+        hi = [max(v.co[i] for v in mesh.vertices) for i in range(3)]
         obj = bpy.data.objects.new(part, mesh)
         obj.data.materials.append(mat)
         bpy.context.scene.collection.objects.link(obj)
         objects[part] = obj
         report["parts"][part] = {
-            "bone": PART_BONE[part],
+            "bone": part_bones[part],
             "blocks": len(boxes),
             "vertices": len(mesh.vertices),
             "polygons": len(mesh.polygons),
-            "bbox": [round(v, 4) for v in (
-                min(b["x"] - b["sx"] / 2 for b in boxes),
-                min(b["y"] - b["sy"] / 2 for b in boxes),
-                min(b["z"] - b["sz"] / 2 for b in boxes),
-                max(b["x"] + b["sx"] / 2 for b in boxes),
-                max(b["y"] + b["sy"] / 2 for b in boxes),
-                max(b["z"] + b["sz"] / 2 for b in boxes))],
+            "bbox": [round(v, 4) for v in lo + hi],
             "mesh_note": meshes_note,
         }
     return objects
@@ -175,10 +228,10 @@ def build_armature(profile):
     return rig
 
 
-def skin(objects, rig):
+def skin(objects, rig, part_bones=PART_BONE):
     problems = []
     for part, obj in objects.items():
-        bone = PART_BONE[part]
+        bone = part_bones[part]
         group = obj.vertex_groups.new(name=bone)
         group.add(list(range(len(obj.data.vertices))), 1.0, "REPLACE")
         mod = obj.modifiers.new("Armature", "ARMATURE")
@@ -416,12 +469,37 @@ def hierarchy_text(profile):
     return "\n".join(lines) + "\n"
 
 
-def main():
+def set_export_sampling(scene, factor):
+    """Increase the export sample rate without changing the saved .blend or clip seconds."""
+    scene.render.fps *= factor
+    scene.frame_end *= factor
+    for action in bpy.data.actions:
+        for layer in action.layers:
+            for strip in layer.strips:
+                for bag in strip.channelbags:
+                    for curve in bag.fcurves:
+                        for point in curve.keyframe_points:
+                            point.co.x *= factor
+                            point.handle_left.x *= factor
+                            point.handle_right.x *= factor
+                        curve.update()
+
+
+def main(profile_path=PROFILE, run_dir=RUN, prepare_profile=None, finish_model=None):
     t0 = time.time()
-    os.makedirs(RUN, exist_ok=True)
-    with open(PROFILE, encoding="utf-8") as fh:
-        profile = json.load(fh)
-    report["profile_sha256"] = hashlib.sha256(open(PROFILE, "rb").read()).hexdigest()
+    blend = os.path.join(run_dir, os.path.basename(BLEND))
+    glb = os.path.join(run_dir, os.path.basename(GLB))
+    report_path = os.path.join(run_dir, os.path.basename(REPORT))
+    hierarchy = os.path.join(run_dir, os.path.basename(HIERARCHY_TXT))
+    os.makedirs(run_dir, exist_ok=True)
+    with open(profile_path, "rb") as fh:
+        raw_profile = fh.read()
+    profile = json.loads(raw_profile)
+    report["profile"] = os.path.relpath(profile_path, ROOT).replace(os.sep, "/")
+    report["profile_sha256"] = hashlib.sha256(raw_profile).hexdigest()
+    if prepare_profile:
+        profile = prepare_profile(profile)
+        report["stage"] = profile["profile"] + "/build"
 
     bpy.ops.wm.read_factory_settings(use_empty=True)
     scene = bpy.context.scene
@@ -437,34 +515,44 @@ def main():
     rig = build_armature(profile)
     log(f"bones built: {len(rig.data.bones)}")
 
-    problems = skin(objects, rig)
+    problems = skin(objects, rig, profile.get("part_bones", PART_BONE))
     report["issues"].extend(problems)
     log(f"skinning applied, problems: {problems}")
 
     build_actions(rig, objects)
     log(f"actions: {list(report['actions'])}")
 
-    with open(HIERARCHY_TXT, "w", encoding="utf-8") as fh:
+    if finish_model:
+        finish_model(profile, rig, objects, run_dir)
+
+    with open(hierarchy, "w", encoding="utf-8") as fh:
         fh.write(hierarchy_text(profile))
-    report["artifacts"]["hierarchy"] = os.path.relpath(HIERARCHY_TXT, ROOT).replace("\\", "/")
+    report["artifacts"]["hierarchy"] = os.path.relpath(hierarchy, ROOT).replace("\\", "/")
     report["hierarchy_text"] = hierarchy_text(profile)
 
     bpy.context.view_layer.update()
-    bpy.ops.wm.save_as_mainfile(filepath=BLEND)
-    report["artifacts"]["blend"] = os.path.relpath(BLEND, ROOT).replace("\\", "/")
-    report["artifacts"]["blend_bytes"] = os.path.getsize(BLEND)
+    bpy.ops.wm.save_as_mainfile(filepath=blend)
+    report["artifacts"]["blend"] = os.path.relpath(blend, ROOT).replace("\\", "/")
+    report["artifacts"]["blend_bytes"] = os.path.getsize(blend)
 
-    kwargs = dict(filepath=GLB, export_format="GLB", use_selection=False,
-                  export_animations=True, export_skins=True, export_apply=False)
+    sample_factor = profile.get("export_sample_factor", 1)
+    if sample_factor > 1:
+        set_export_sampling(scene, sample_factor)
+    report["glb_sampling_hz"] = scene.render.fps / scene.render.fps_base
+    kwargs = dict(filepath=glb, export_format="GLB", use_selection=False,
+                  export_animations=True, export_skins=True, export_apply=False,
+                  export_extras=bool(finish_model))
     try:
         bpy.ops.export_scene.gltf(**kwargs)
         export_args = sorted(kwargs)
     except TypeError as exc:
+        if finish_model:
+            raise
         report["issues"].append(f"gltf export args fallback: {exc}")
-        bpy.ops.export_scene.gltf(filepath=GLB, export_format="GLB")
+        bpy.ops.export_scene.gltf(filepath=glb, export_format="GLB")
         export_args = ["filepath", "export_format"]
-    report["artifacts"]["glb"] = os.path.relpath(GLB, ROOT).replace("\\", "/")
-    report["artifacts"]["glb_bytes"] = os.path.getsize(GLB)
+    report["artifacts"]["glb"] = os.path.relpath(glb, ROOT).replace("\\", "/")
+    report["artifacts"]["glb_bytes"] = os.path.getsize(glb)
     report["export_args"] = export_args
 
     report["counts"] = {
@@ -477,10 +565,10 @@ def main():
     }
     report["seconds"] = round(time.time() - t0, 1)
     report["status"] = "BUILD_DONE" if not report["issues"] else "BUILD_DONE_WITH_ISSUES"
-    with open(REPORT, "w", encoding="utf-8") as fh:
+    with open(report_path, "w", encoding="utf-8") as fh:
         json.dump(report, fh, indent=2, ensure_ascii=False, sort_keys=True)
     print("MANNEQUIN_BUILD=" + report["status"])
-    print("MANNEQUIN_BUILD_REPORT=" + REPORT)
+    print("MANNEQUIN_BUILD_REPORT=" + report_path)
     print(json.dumps(report["counts"], ensure_ascii=False))
 
 

@@ -16,10 +16,12 @@ Run:
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import math
 import os
 import sys
+from pathlib import Path
 import time
 
 import bpy
@@ -182,24 +184,39 @@ def centroid(points):
     return v / len(points)
 
 
-def main():
-    os.makedirs(RENDERS, exist_ok=True)
-    with open(PROFILE, encoding="utf-8") as fh:
+def main(profile_path=PROFILE, run_dir=RUN, prepare_profile=None, inspect_model=None, review_shots=None):
+    blend = os.path.join(run_dir, os.path.basename(BLEND))
+    glb = os.path.join(run_dir, os.path.basename(GLB))
+    report_path = os.path.join(run_dir, os.path.basename(REPORT))
+    renders = os.path.join(run_dir, "renders")
+    os.makedirs(renders, exist_ok=True)
+    with open(profile_path, encoding="utf-8") as fh:
         profile = json.load(fh)
-    parts_boxes = profile["parts"]
+    if prepare_profile:
+        profile = prepare_profile(profile)
+        report["stage"] = profile["profile"] + "/validation"
+    part_bones = profile.get("part_bones", PART_BONE)
+    expected_parts = set(part_bones)
+    expected_bones = {spec["name"] for spec in profile["bones"]}
+    parts_boxes = {name: profile["parts"][name] for name in PART_BONE}
 
-    if not os.path.isfile(BLEND):
+    if not os.path.isfile(blend):
         print("MANNEQUIN_VALIDATION=FAIL missing blend")
         sys.exit(2)
-    bpy.ops.wm.open_mainfile(filepath=BLEND)
+    if inspect_model:
+        def artifact_manifest():
+            return {name: hashlib.sha256(Path(path).read_bytes()).hexdigest()
+                    for name, path in (("blend", blend), ("glb", glb))}
+        report["artifacts"]["sha256"] = artifact_manifest()
+    bpy.ops.wm.open_mainfile(filepath=blend)
     scene = bpy.context.scene
     rig = bpy.data.objects.get("mannequin_v3_rig")
     meshes = {o.name: o for o in scene.objects if o.type == "MESH"}
     report["numbers"].update({"objects": len(meshes), "object_names": sorted(meshes),
                               "bones": len(rig.data.bones) if rig else 0})
 
-    missing = [p for p in EXPECTED_PARTS if p not in meshes]
-    stage("part_list", len(meshes) == len(EXPECTED_PARTS) and not missing,
+    missing = sorted(expected_parts - meshes.keys())
+    stage("part_list", len(meshes) == len(expected_parts) and not missing,
           f"{len(meshes)} parts, missing={missing}")
 
     verts = sum(len(o.data.vertices) for o in meshes.values())
@@ -229,8 +246,8 @@ def main():
           f"nan={nan_parts} degenerate={degenerate}")
 
     bones = [b.name for b in rig.data.bones] if rig else []
-    bone_missing = [b for b in EXPECTED_BONES if b not in bones]
-    stage("bone_list", len(bones) == len(EXPECTED_BONES) and not bone_missing,
+    bone_missing = sorted(expected_bones - set(bones))
+    stage("bone_list", len(bones) == len(expected_bones) and not bone_missing,
           f"{len(bones)} bones, missing={bone_missing}")
 
     bad = []
@@ -245,12 +262,12 @@ def main():
         if b.use_connect != bool(spec["connected"]):
             bad.append(f"{spec['name']} connect {b.use_connect}")
     stage("bone_hierarchy", not bad,
-          "; ".join(bad) if bad else "20 bones, parents and connections match the profile")
+          "; ".join(bad) if bad else f"{len(bones)} bones, parents and connections match the profile")
 
     # -------------------------------------------------------------- rigid skinning --
     skin_bad = []
     for name, obj in meshes.items():
-        bone = PART_BONE[name]
+        bone = part_bones[name]
         groups = list(obj.vertex_groups)
         if len(groups) != 1 or groups[0].name != bone:
             skin_bad.append(f"{name}: groups={[g.name for g in groups]}")
@@ -263,7 +280,7 @@ def main():
                                 f"{[round(g.weight, 4) for g in v.groups]}")
                 break
     stage("rigid_vertex_groups", not skin_bad, "; ".join(skin_bad[:4]) if skin_bad else
-          "18 parts, exactly one vertex group each, all weights 1.0")
+          f"{len(meshes)} parts, exactly one vertex group each, all weights 1.0")
 
     # ---------------------------------------------- poses: rigid transform + joints --
     bone_parent = {spec["name"]: spec["parent"] for spec in profile["bones"]}
@@ -312,7 +329,7 @@ def main():
         min_z = 1e9
         part_centroids = {}
         for name, obj in meshes.items():
-            expected = [Ms[PART_BONE[name]] @ (obj.matrix_world.inverted() @ p) for p in rest_pts[name]]
+            expected = [Ms[part_bones[name]] @ (obj.matrix_world.inverted() @ p) for p in rest_pts[name]]
             actual = evaluated_vertices(obj)
             for e, a in zip(expected, actual):
                 dev_max = max(dev_max, (e - a).length)
@@ -409,14 +426,17 @@ def main():
     stage("pose_semantics", all(checks.values()),
           ", ".join(f"{k}={'ok' if v else 'FAIL'}" for k, v in checks.items()))
 
+    if inspect_model:
+        inspect_model(profile, rig, meshes, stage, report, roundtrip=False)
+
     # ------------------------------------------------------------------- round trip --
     rt_ok, rt_detail = False, "not run"
     try:
         bpy.ops.wm.read_factory_settings(use_empty=True)
-        bpy.ops.import_scene.gltf(filepath=GLB)
+        bpy.ops.import_scene.gltf(filepath=glb, disable_bone_shape=True)
         scene2 = bpy.context.scene
         rt_meshes = {o.name: o for o in scene2.objects if o.type == "MESH"}
-        rt_parts = {n: o for n, o in rt_meshes.items() if n in EXPECTED_PARTS}
+        rt_parts = {n: o for n, o in rt_meshes.items() if n in expected_parts}
         rt_arms = [o for o in scene2.objects if o.type == "ARMATURE"]
         rt_actions = sorted(a.name for a in bpy.data.actions)
         rt_bones = len(rt_arms[0].data.bones) if rt_arms else 0
@@ -427,8 +447,11 @@ def main():
                 if len(ws) != 1 or abs(ws[0] - 1.0) > 1e-4:
                     weight_bad.append(f"{name}:{v.index}:{ws}")
                     break
-        rt_ok = (len(rt_parts) == 18 and rt_bones == 20 and not weight_bad
+        rt_ok = (len(rt_parts) == len(expected_parts) and rt_bones == len(expected_bones) and not weight_bad
                  and len(rt_actions) >= 3)
+        if inspect_model:
+            inspect_model(profile, rt_arms[0], rt_parts, stage, report, roundtrip=True)
+            rt_ok = rt_ok and not (set(rt_meshes) - set(rt_parts))
         rt_detail = (f"parts={len(rt_parts)} extra_meshes={sorted(set(rt_meshes) - set(rt_parts))} "
                      f"bones={rt_bones} skinned_weights_bad={weight_bad[:3]} actions={rt_actions}")
         report["numbers"]["roundtrip"] = {"parts": len(rt_parts), "bones": rt_bones,
@@ -442,33 +465,37 @@ def main():
         stage("renders", True, "skipped by --skip-renders")
     else:
         try:
-            render_setup_and_run()
+            render_setup_and_run(blend, renders, review_views=bool(prepare_profile), review_shots=review_shots)
             stage("renders", report["numbers"].get("render_ok", False),
                   json.dumps(report["numbers"].get("render_seconds", {})))
         except Exception as exc:
             report["issues"].append(f"render: {type(exc).__name__}: {exc}")
             stage("renders", False, f"{type(exc).__name__}: {exc}")
 
+    if inspect_model:
+        stage("validated_artifact_identity", artifact_manifest() == report["artifacts"]["sha256"],
+              "Build hashes are unchanged through validation and rendering")
     report["seconds_total"] = round(time.time() - t_all, 1)
     report["result"] = "PASS" if all(s["ok"] for s in report["stages"].values()) else "FAIL"
-    with open(REPORT, "w", encoding="utf-8") as fh:
+    with open(report_path, "w", encoding="utf-8") as fh:
         json.dump(report, fh, indent=2, ensure_ascii=False, sort_keys=True)
     print("MANNEQUIN_VALIDATION=" + report["result"])
     for nm, st in report["stages"].items():
         print(f"MANNEQUIN_STAGE {nm}={'PASS' if st['ok'] else 'FAIL'} :: {st['detail']}")
-    print("MANNEQUIN_VALIDATION_REPORT=" + REPORT)
+    print("MANNEQUIN_VALIDATION_REPORT=" + report_path)
+    return report["result"] == "PASS"
 
 
-def render_setup_and_run():
-    bpy.ops.wm.open_mainfile(filepath=BLEND)
+def render_setup_and_run(blend, renders, review_views=False, review_shots=None):
+    bpy.ops.wm.open_mainfile(filepath=blend)
     scene = bpy.context.scene
     rig = bpy.data.objects["mannequin_v3_rig"]
 
     scene.render.engine = "CYCLES"
     scene.cycles.device = "CPU"
-    scene.cycles.samples = 64
+    scene.cycles.samples = 24 if review_shots else (32 if review_views else 64)
     scene.cycles.use_denoising = True
-    scene.render.resolution_x = 800
+    scene.render.resolution_x = 1000 if review_views else 800
     scene.render.resolution_y = 1200
     scene.render.image_settings.file_format = "PNG"
     scene.view_settings.view_transform = "Standard"
@@ -522,39 +549,62 @@ def render_setup_and_run():
         scene.collection.objects.link(o)
 
     def shoot(name, location, cam_type="ORTHO", ortho_scale=2.55, lens=70.0,
-              transparent=False, hide_floor=False):
+              transparent=False, hide_floor=False, focus=(0, 0, 0.92)):
         cam_data.type = cam_type
         if cam_type == "ORTHO":
             cam_data.ortho_scale = ortho_scale
         else:
             cam_data.lens = lens
+        target.location = focus
         cam.location = location
         scene.render.film_transparent = transparent
         floor.hide_render = hide_floor
         bpy.context.view_layer.update()
-        scene.render.filepath = os.path.join(RENDERS, name)
+        scene.render.filepath = os.path.join(renders, name)
         t = time.time()
         bpy.ops.render.render(write_still=True)
         return round(time.time() - t, 2)
 
-    times = {}
-    apply_frame(rig, None, 1)
-    times["front"] = shoot("tpose_front.png", (0.0, -8.0, 0.92))
-    times["side"] = shoot("tpose_side.png", (8.0, 0.0, 0.92))
-    times["three_quarter"] = shoot("tpose_three_quarter.png", (-2.9, -3.7, 1.62), "PERSP")
-    times["front_alpha"] = shoot("tpose_front_silhouette.png", (0.0, -8.0, 0.92),
-                                 transparent=True, hide_floor=True)
-    for label, action, frame in (("IDLE", "idle", 1), ("WALK_CONTACT", "walk", 1),
-                                 ("WALK_PASS", "walk", 5), ("ATTACK_WINDUP", "attack", 5),
-                                 ("ATTACK_STRIKE", "attack", 9)):
-        apply_frame(rig, action, frame)
-        times[label] = shoot(f"pose_{label.lower()}.png", (-2.9, -3.7, 1.62), "PERSP")
-        times[label + "_front"] = shoot(f"pose_{label.lower()}_front.png", (0.0, -8.0, 0.92))
+    if review_views:
+        apply_frame(rig, None, 1)
+        views = {
+            "FRONT": (0, -8, 0.92), "BACK": (0, 8, 0.92),
+            "LEFT": (8, 0, 0.92), "RIGHT": (-8, 0, 0.92),
+            "THREE_QUARTER": (5, -7, 3.3),
+        }
+        times = {name + ".png": shoot(name + ".png", location, ortho_scale=2.20)
+                 for name, location in views.items()}
+        times["tpose_front_silhouette.png"] = shoot(
+            "tpose_front_silhouette.png", views["FRONT"], ortho_scale=2.20,
+            transparent=True, hide_floor=True)
+        for label, action, frame in POSE_FRAMES[1:]:
+            apply_frame(rig, action, frame)
+            name = {"WALK_CONTACT": "WALK", "ATTACK_STRIKE": "ATTACK"}.get(label, label)
+            times[name + ".png"] = shoot(name + ".png", views["THREE_QUARTER"], ortho_scale=2.20)
+        if review_shots:
+            times.update(review_shots(rig, shoot))
+        filenames = list(times)
+    else:
+        times = {}
+        apply_frame(rig, None, 1)
+        times["front"] = shoot("tpose_front.png", (0.0, -8.0, 0.92))
+        times["side"] = shoot("tpose_side.png", (8.0, 0.0, 0.92))
+        times["three_quarter"] = shoot("tpose_three_quarter.png", (-2.9, -3.7, 1.62), "PERSP")
+        times["front_alpha"] = shoot("tpose_front_silhouette.png", (0.0, -8.0, 0.92),
+                                     transparent=True, hide_floor=True)
+        for label, action, frame in (("IDLE", "idle", 1), ("WALK_CONTACT", "walk", 1),
+                                     ("WALK_PASS", "walk", 5), ("ATTACK_WINDUP", "attack", 5),
+                                     ("ATTACK_STRIKE", "attack", 9)):
+            apply_frame(rig, action, frame)
+            times[label] = shoot(f"pose_{label.lower()}.png", (-2.9, -3.7, 1.62), "PERSP")
+            times[label + "_front"] = shoot(f"pose_{label.lower()}_front.png", (0.0, -8.0, 0.92))
+
+        filenames = sorted(os.listdir(renders))
     report["numbers"]["render_seconds"] = times
-    report["numbers"]["render_files"] = sorted(os.listdir(RENDERS))
-    report["artifacts"]["renders"] = os.path.relpath(RENDERS, ROOT).replace("\\", "/")
+    report["numbers"]["render_files"] = sorted(filenames)
+    report["artifacts"]["renders"] = os.path.relpath(renders, ROOT).replace("\\", "/")
     report["numbers"]["render_ok"] = all(
-        os.path.getsize(os.path.join(RENDERS, f)) > 10000 for f in os.listdir(RENDERS))
+        os.path.getsize(os.path.join(renders, f)) > 10000 for f in filenames)
 
 
 if __name__ == "__main__":

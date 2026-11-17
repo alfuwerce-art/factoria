@@ -25,9 +25,6 @@ from PIL import Image, ImageDraw, ImageFont
 ROOT = Path(__file__).resolve().parents[2]
 REF = ROOT / "outputs" / "factory" / "mannequin_v3" / "REFERENCE_MANNEQUIN_V3_OWNER.png"
 RUN = ROOT / "outputs" / "prototypes" / "mannequin_v3_rig" / "run1"
-MODEL_ALPHA = RUN / "renders" / "tpose_front_silhouette.png"
-OUT = RUN / "compare"                       # review images (local only: they show the owner reference)
-REPORT_JSON = RUN / "PROPORTIONS_COMPARISON.json"
 REF_MALE_BBOX = (240, 97, 782, 754)          # measured male figure in the reference sheet
 TARGET_H = 900
 METER_HEIGHT = 1.80
@@ -134,11 +131,12 @@ def scale_to_height(img: Image.Image, height: int) -> Image.Image:
     return img.resize((max(1, round(w * height / h)), height), Image.LANCZOS)
 
 
-def main():
-    OUT.mkdir(parents=True, exist_ok=True)
-    ref_img = Image.open(REF).convert("RGB")
+def main(run=RUN, task="MANNEQUIN-RIG-01", reference=REF):
+    out = run / "compare"
+    out.mkdir(parents=True, exist_ok=True)
+    ref_img = Image.open(reference).convert("RGB")
     ref_mask = fill_holes(mask_from_reference(ref_img, REF_MALE_BBOX))
-    model_alpha = Image.open(MODEL_ALPHA).convert("RGBA")
+    model_alpha = Image.open(run / "renders" / "tpose_front_silhouette.png").convert("RGBA")
     model_mask = fill_holes(mask_from_alpha(model_alpha))
 
     ref_prof = profile(ref_mask)
@@ -154,9 +152,9 @@ def main():
                          "arm_span_m": round(model_prof["ratios"]["arm_span_over_height"] * METER_HEIGHT, 4)},
         },
     }
-    (REPORT_JSON).write_text(
-        json.dumps({"task": "MANNEQUIN-RIG-01",
-                    "reference": str(REF.relative_to(ROOT)).replace("\\", "/"),
+    (run / "PROPORTIONS_COMPARISON.json").write_text(
+        json.dumps({"task": task,
+                    "reference": str(reference.relative_to(ROOT)).replace("\\", "/"),
                     "model_height_m": METER_HEIGHT, "table": table}, indent=2,
                    ensure_ascii=False) + "\n", encoding="utf-8")
 
@@ -179,9 +177,9 @@ def main():
     except Exception:
         font = ImageFont.load_default()
     draw.text((pad, 14), "V3 REFERENCE (approved male mannequin)", font=font, fill=(235, 235, 235))
-    draw.text((pad * 2 + ref_scaled.width, 14), "GENERATED BLOCK MANNEQUIN (T-pose)",
+    draw.text((pad * 2 + ref_scaled.width, 14), f"{task} (T-pose)",
               font=font, fill=(235, 235, 235))
-    canvas.save(OUT / "compare_front.png")
+    canvas.save(out / "compare_front.png")
 
     # --- silhouette difference ---------------------------------------------------
     h = TARGET_H
@@ -228,9 +226,9 @@ def main():
     draw.text((240, 56), "reference only", font=font, fill=(80, 130, 200))
     draw.rectangle((420, 58, 450, 78), fill=(165, 165, 165))
     draw.text((460, 56), "shared", font=font, fill=(175, 175, 175))
-    img.save(OUT / "compare_overlay.png")
+    img.save(out / "compare_overlay.png")
 
-    print("COMPARE_OUT=" + str(OUT))
+    print("COMPARE_OUT=" + str(out))
     for key, ref_v in table["reference"].items():
         print(f"{key:26s} ref={ref_v:.4f} model={table['model'][key]:.4f} "
               f"delta={table['delta'][key]:+.4f}")

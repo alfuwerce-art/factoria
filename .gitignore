@@ -103,3 +103,10 @@ outputs/prototypes/mannequin_v3_rig/run1/compare/
 outputs/prototypes/mannequin_v3_rig/run1/*.blend
 outputs/prototypes/mannequin_v3_rig/run1/*.blend1
 outputs/prototypes/mannequin_v3_rig/run1/*.glb
+
+# MANNEQUIN-GEO-02: intermediate review run stays local
+outputs/prototypes/mannequin_geo_02/
+
+# GEO-02R: owner-reference plates and individual renders stay local
+outputs/prototypes/mannequin_geo_02r/**/compare/
+outputs/prototypes/mannequin_geo_02r/**/renders/
