@@ -1,13 +1,5 @@
-# Factoria — CubeGame Asset & Animation Factory
+# Factoria — исторический репозиторий
 
-Отдельный проект разработки конвейера 3D-моделей, ригов, skinning и анимаций для CubeGame.
+Дальнейшая разработка инструментов персонажей ведётся в [CubeGame](https://github.com/alfuwerce-art/CubeGame). [PR миграции CubeGame](https://github.com/alfuwerce-art/CubeGame/pull/15) содержит выбранные исходники, конфигурации, прототипы и журнал происхождения.
 
-- **Рабочая директория DeepSeek:** `D:\Projects\CubeGame Factory`.
-- **Рабочая ветка:** [`factory/work`](../../tree/factory/work). Здесь текущие документы, код, отчёты, эксперименты и межчатовая память.
-- **`main`:** только утверждённая стабильная документация. Без отдельного утверждения изменения из `factory/work` сюда не переносить.
-- Репозиторий [CubeGame](https://github.com/alfuwerce-art/CubeGame) — отдельная игра. При запросе **«мод»** обращаться в Factoria, не открывать CubeGame.
-- **Цель:** проверенный, повторяемый конвейер; снижающий ручные технические правки на одну одобренную анимированную модель. Ни установка, ни наличие файла не заменяют проверку результата.
-
-**Статус на момент создания:** GitHub отделён от CubeGame; локальные файлы и отчёты исполнителя требуют синхронизации с `factory/work`. Никакие тесты Factory этим действием не выполнялись.
-
-См. `factory/work/AGENTS.md` и `factory/work/03_FACTORY_PROJECT_MEMORY.md` в рабочей ветке.
+Историю экспериментов можно читать по [factory/work @ 9a2273a](https://github.com/alfuwerce-art/factoria/tree/9a2273a6dc90700e33f4af9b02fd0632c7eb3c47) и [GEO-02R @ 5ccdfb0](https://github.com/alfuwerce-art/factoria/tree/5ccdfb079cf69c326e9532be33ad4100797b1b62). GEO-03 и GEO-04 также сохранены в локальном Git bundle проекта. Этот репозиторий подготовлен к архивированию после приёмки переноса.
